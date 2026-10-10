@@ -16,6 +16,7 @@ Run: python -m unittest discover -s tests
 import ast
 import re
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -30,6 +31,31 @@ RELATION = re.compile(r"\"(?:gold_)?relation\"\s*:\s*\"(?:same|different)\"")
 ORIGINAL_PAIR_ID = re.compile(r"\bt1_\d{4}\b")
 
 
+def is_source_checkout(repo: Path = REPO) -> bool:
+    """True for the Team A source repository (a git checkout, or a copy that still has ``validation/``), False for
+    the Kaggle copy, which embeds only ``dkmem/`` and ``tests/``."""
+    return (repo / ".git").exists() or (repo / "validation").is_dir()
+
+
+def gitignore_status(repo: Path = REPO) -> tuple[str, str]:
+    """``("ok" | "fail" | "skip", why)``: does ``.gitignore`` keep Team B's key out of git?
+
+    The check may be skipped only where there is no source repository at all (the Kaggle payload has no
+    ``.gitignore``). In a source checkout a missing or incomplete ``.gitignore`` is a failure: skipping there would
+    silently remove the protection this test exists for.
+    """
+    gi = repo / ".gitignore"
+    if not gi.is_file():
+        if is_source_checkout(repo):
+            return "fail", ".gitignore is missing from a source checkout: the answer key would no longer be ignored"
+        return "skip", "no .gitignore and not a source checkout (the Kaggle copy embeds only dkmem/ and tests/)"
+    lines = {l.strip() for l in gi.read_text(encoding="utf-8").splitlines()}
+    missing = [p for p in ("teamB_answer_key.jsonl", "*answer_key*.jsonl") if p not in lines]
+    if missing:
+        return "fail", f".gitignore lacks {missing}"
+    return "ok", ""
+
+
 def embedded_files():
     for top in EMBEDDED_TREES:
         for path in (REPO / top).rglob("*"):
@@ -39,9 +65,10 @@ def embedded_files():
 
 class TestKeyIsNotCommitted(unittest.TestCase):
     def test_gitignore_covers_the_key_wherever_it_is_placed(self):
-        lines = {l.strip() for l in (REPO / ".gitignore").read_text(encoding="utf-8").splitlines()}
-        self.assertIn("teamB_answer_key.jsonl", lines)
-        self.assertIn("*answer_key*.jsonl", lines)
+        status, why = gitignore_status()
+        if status == "skip":
+            self.skipTest(why)
+        self.assertEqual(status, "ok", why)
 
     @unittest.skipUnless((REPO / ".git").exists(), "not a git checkout (e.g. the Kaggle copy)")
     def test_no_tracked_file_is_an_answer_key(self):
@@ -60,6 +87,51 @@ class TestKeyIsNotCommitted(unittest.TestCase):
         self.assertEqual(r.returncode, 0)
 
 
+class TestGitignoreRule(unittest.TestCase):
+    """The rule behind the check above, on synthetic layouts (so the Kaggle case is tested without Kaggle)."""
+
+    GOOD = "# comment\nteamB_answer_key.jsonl\n*answer_key*.jsonl\n"
+
+    def layout(self, gitignore=None, git=False, validation=False):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        if gitignore is not None:
+            (root / ".gitignore").write_text(gitignore, encoding="utf-8")
+        if git:
+            (root / ".git").mkdir()
+        if validation:
+            (root / "validation").mkdir()
+        return root
+
+    def test_complete_gitignore_passes(self):
+        self.assertEqual(gitignore_status(self.layout(self.GOOD, git=True)), ("ok", ""))
+        self.assertEqual(gitignore_status(self.layout(self.GOOD)), ("ok", ""))
+
+    def test_missing_gitignore_is_a_failure_in_a_source_checkout(self):
+        for kwargs in ({"git": True}, {"validation": True}, {"git": True, "validation": True}):
+            with self.subTest(layout=kwargs):
+                self.assertEqual(gitignore_status(self.layout(None, **kwargs))[0], "fail")
+
+    def test_missing_gitignore_is_skipped_only_in_the_kaggle_layout(self):
+        status, why = gitignore_status(self.layout(None))
+        self.assertEqual(status, "skip")
+        self.assertIn("Kaggle", why)
+
+    def test_incomplete_gitignore_fails_everywhere(self):
+        for text in ("", "teamB_answer_key.jsonl\n", "*answer_key*.jsonl\n",
+                     "# teamB_answer_key.jsonl\n*answer_key*.jsonl\n"):
+            for kwargs in ({}, {"git": True}):
+                with self.subTest(text=text, layout=kwargs):
+                    self.assertEqual(gitignore_status(self.layout(text, **kwargs))[0], "fail")
+
+    def test_this_repository_is_recognised_as_a_source_checkout_where_it_should_be(self):
+        if (REPO / "validation").is_dir() or (REPO / ".git").exists():
+            self.assertTrue(is_source_checkout())
+        else:
+            self.assertFalse(is_source_checkout())
+
+
 class TestNothingEmbeddedHoldsGoldLabels(unittest.TestCase):
     def test_no_file_named_like_a_key_is_in_an_embedded_tree(self):
         self.assertEqual([str(p.relative_to(REPO)) for p in embedded_files() if "answer_key" in p.name.lower()], [])
@@ -73,7 +145,10 @@ class TestNothingEmbeddedHoldsGoldLabels(unittest.TestCase):
         self.assertEqual(offenders, [])
 
     def test_the_builders_embed_only_dkmem_and_tests(self):
-        for builder in (REPO / "validation").glob("*/build_kernel.py"):
+        builders = list((REPO / "validation").glob("*/build_kernel.py"))
+        if is_source_checkout():
+            self.assertTrue(builders, "no validation/*/build_kernel.py found: this guard would pass vacuously")
+        for builder in builders:
             src = builder.read_text(encoding="utf-8")
             if "for top in" in src:
                 self.assertIn('for top in ("dkmem", "tests")', src, builder)
