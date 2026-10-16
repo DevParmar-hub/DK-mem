@@ -69,7 +69,7 @@ from dkmem.backends.llm import GenerationParams
 from dkmem.memory.cache import ExtractionCache, cached_extract_many
 from dkmem.memory.extract import TextGenerator, _parse_lang_tag, extract_many
 from dkmem.memory.lexicon import Lexicon
-from dkmem.memory.matcher import find_matches, match_distinctions
+from dkmem.memory.matcher import find_matches, match_distinctions_multi
 from dkmem.memory.prompts import DEFAULT_EXTRACTION_PROMPT, PromptTemplate
 from dkmem.memory.schema import Extraction, ProbeItem
 
@@ -130,9 +130,7 @@ def resolve_distinction(
     guess. With no ambiguity the extraction is not needed at all and may be ``None``.
     """
     components = _parse_lang_tag(lang)
-    resolved: dict[str, str] = {}
-    for component in components:
-        resolved.update(match_distinctions(lexicon, utterance, component))
+    resolved = match_distinctions_multi(lexicon, utterance, components)
     ambiguous = _ambiguous_classes(lexicon, utterance, components)
     result = {cls: value for cls, value in resolved.items() if cls not in ambiguous}
     if not ambiguous:

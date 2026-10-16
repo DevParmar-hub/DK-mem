@@ -1,0 +1,118 @@
+{
+ "benchmark": "DK-Mem Tier-2 controlled multi-session injection benchmark",
+ "version": "1.0",
+ "statement": "Tier 2 is a controlled injection benchmark built from constructed sentences; it makes no claim about the natural frequency of these distinctions in conversation. Labels are by construction from the provisional Tier-1 gold.",
+ "seed": 20261009,
+ "parameters": {
+  "n_sessions": 6,
+  "turns_per_session": 4,
+  "distances": [
+   1,
+   3,
+   5
+  ],
+  "user_turns_per_conversation": 12,
+  "distractor_user_turns_per_conversation": 10,
+  "shared_candidate_retrieval": {
+   "embedder": "BAAI/bge-m3",
+   "top_k": 5
+  },
+  "qa_scoring": "all_slots_contained_and_no_forbidden_after_normalisation",
+  "turn_id_format": "t2c_NNNN_sS_tT",
+  "date_labels": "weekly from 2026-03-02"
+ },
+ "sources": {
+  "tier1_input_sha256_lf": "eab5dcb23375eb2e744c72a98cb31c25da0171b2ba3297a0843574ed9a34cd07",
+  "tier1_gold_sha256": "0cfda04896950387bcd23fa3c59dc9e71befba9d84021d66fe65bb0fa9848fca",
+  "pair_specs_sha256": "70689e771b6e82642397d16ac0e279aaa2dab664b5ef97d8d2df3139c910331a",
+  "distractors_sha256": "98aeff1dbee715071589d4d1a7839eacdda43bc18ce40fa5843a3c849922ec80",
+  "generator_sha256": "e8736b6af1d9db61d0c79b02a19dfa3a8b0ee6df688535fdcc7b3f10c9715605"
+ },
+ "counts": {
+  "conversations": 69,
+  "injected_pairs": 69,
+  "qa_questions": 111,
+  "qa_references": 111,
+  "by_relation": {
+   "different": 42,
+   "same": 27
+  },
+  "by_class": {
+   "honorific_register": 13,
+   "kinship": 32,
+   "name_variant": 24
+  },
+  "by_language": {
+   "de": 6,
+   "hi": 63
+  },
+  "by_session_distance": {
+   "1": 23,
+   "3": 23,
+   "5": 23
+  },
+  "by_class_relation": {
+   "honorific_register|different": 6,
+   "honorific_register|same": 7,
+   "kinship|different": 32,
+   "name_variant|different": 4,
+   "name_variant|same": 20
+  },
+  "by_class_session_distance": {
+   "honorific_register|1": 4,
+   "honorific_register|3": 4,
+   "honorific_register|5": 5,
+   "kinship|1": 11,
+   "kinship|3": 11,
+   "kinship|5": 10,
+   "name_variant|1": 8,
+   "name_variant|3": 8,
+   "name_variant|5": 8
+  },
+  "by_relation_session_distance": {
+   "different|1": 14,
+   "different|3": 14,
+   "different|5": 14,
+   "same|1": 9,
+   "same|3": 9,
+   "same|5": 9
+  },
+  "by_language_class": {
+   "de|honorific_register": 6,
+   "hi|honorific_register": 7,
+   "hi|kinship": 32,
+   "hi|name_variant": 24
+  },
+  "qa_by_type": {
+   "disambiguation": 84,
+   "link": 27
+  }
+ },
+ "files": {
+  "tier2_conversations.jsonl": {
+   "sha256": "e5b9926a0ae9e6be545ecf33030807db65947c55711b9072412583d7a1448221",
+   "bytes": 220485,
+   "lines": 69
+  },
+  "tier2_injection_metadata.jsonl": {
+   "sha256": "f1a207ea50745bb1d2b7e34ff7fa77f53e46b71b3a74a388b6a0886c0c38b7a3",
+   "bytes": 61409,
+   "lines": 69
+  },
+  "tier2_gold.jsonl": {
+   "sha256": "7bfd9ea4ead48ffe6e240cbd1d1d4ed77bb573dcce2ebebbc50815c54bc10df3",
+   "bytes": 20138,
+   "lines": 69
+  },
+  "tier2_qa_questions.jsonl": {
+   "sha256": "c9ecde4fb2f5d2e6eabe218ba2232e7769917dc79d4ee4f274290f9f16ca12b9",
+   "bytes": 17607,
+   "lines": 111
+  },
+  "tier2_qa_reference.jsonl": {
+   "sha256": "a6205389ef13e2e84873b647bbce874a5750e5a94602da37470a174dddb93b42",
+   "bytes": 43054,
+   "lines": 111
+  }
+ }
+}

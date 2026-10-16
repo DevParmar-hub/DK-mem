@@ -1,0 +1,266 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "key.json (SECRET until the freeze): header + records; its exact bytes are hashed",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "header",
+  "records"
+ ],
+ "properties": {
+  "header": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "schema_version",
+    "revision",
+    "author_id",
+    "language",
+    "native_language_region",
+    "authored_utc",
+    "tools_used",
+    "nonce",
+    "attests_no_benchmark_exposure",
+    "attests_no_llm_drafting",
+    "conflict_report"
+   ],
+   "properties": {
+    "schema_version": {
+     "const": "1"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "author_id": {
+     "type": "string"
+    },
+    "language": {
+     "enum": [
+      "hi",
+      "mr",
+      "gu"
+     ]
+    },
+    "native_language_region": {
+     "type": "string"
+    },
+    "authored_utc": {
+     "type": "string"
+    },
+    "tools_used": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "nonce": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$",
+     "description": "256 random bits, secret, never reused"
+    },
+    "attests_no_benchmark_exposure": {
+     "type": "boolean"
+    },
+    "attests_no_llm_drafting": {
+     "type": "boolean"
+    },
+    "conflict_report": {
+     "type": "string",
+     "minLength": 10,
+     "description": "REQUIRED summary: how many items you flagged and the recurring problems; if none, say what you checked"
+    }
+   }
+  },
+  "records": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "item_id",
+     "relation",
+     "distinction_class",
+     "marker_a",
+     "marker_b",
+     "fact_a",
+     "fact_b",
+     "qa",
+     "author_confidence",
+     "source_kind",
+     "conflict"
+    ],
+    "properties": {
+     "item_id": {
+      "type": "string"
+     },
+     "relation": {
+      "enum": [
+       "same",
+       "different"
+      ]
+     },
+     "distinction_class": {
+      "enum": [
+       "kinship",
+       "honorific_register",
+       "name_variant",
+       "contextual_qualifier"
+      ],
+      "description": "name_variant => same only; contextual_qualifier => different only"
+     },
+     "marker_a": {
+      "type": "string",
+      "description": "the span in text_a that carries the distinction (kinship term, pronoun, name, qualifier)"
+     },
+     "marker_b": {
+      "type": "string"
+     },
+     "fact_a": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "attribute",
+       "value"
+      ],
+      "properties": {
+       "attribute": {
+        "type": "string"
+       },
+       "value": {
+        "type": "string"
+       }
+      }
+     },
+     "fact_b": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "attribute",
+       "value"
+      ],
+      "properties": {
+       "attribute": {
+        "type": "string"
+       },
+       "value": {
+        "type": "string"
+       }
+      }
+     },
+     "qa": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "role",
+        "question",
+        "slots",
+        "forbidden"
+       ],
+       "properties": {
+        "role": {
+         "enum": [
+          "a",
+          "b",
+          "ab"
+         ]
+        },
+        "question": {
+         "type": "string",
+         "minLength": 3
+        },
+        "slots": {
+         "type": "array",
+         "items": {
+          "type": "array",
+          "items": {
+           "type": "string",
+           "minLength": 1
+          },
+          "minItems": 1
+         },
+         "minItems": 1,
+         "description": "each slot = accepted aliases of one required answer part"
+        },
+        "forbidden": {
+         "type": "array",
+         "items": {
+          "type": "array",
+          "items": {
+           "type": "string",
+           "minLength": 1
+          },
+          "minItems": 1
+         },
+         "description": "empty for role ab; for a/b the other member's fact aliases"
+        }
+       }
+      },
+      "minItems": 1,
+      "maxItems": 2
+     },
+     "author_confidence": {
+      "enum": [
+       "certain",
+       "probable",
+       "ambiguous"
+      ]
+     },
+     "ambiguity_note": {
+      "type": "string"
+     },
+     "plausible_alternative_label": {
+      "enum": [
+       "same",
+       "different",
+       null
+      ]
+     },
+     "source_kind": {
+      "enum": [
+       "original",
+       "adapted_real_chat"
+      ]
+     },
+     "conflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "flagged"
+      ],
+      "description": "REQUIRED on every record. flagged=false means you checked and found no conflict. flagged=true needs kinds and description.",
+      "properties": {
+       "flagged": {
+        "type": "boolean"
+       },
+       "kinds": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "enum": [
+          "relation_label_unclear",
+          "kinship_term_unclear",
+          "pronoun_or_register_unclear",
+          "wording_or_script_unclear",
+          "does_not_map_to_class_definition",
+          "convention_1_wrong",
+          "convention_2_wrong",
+          "convention_3_wrong",
+          "convention_4_wrong"
+         ]
+        }
+       },
+       "description": {
+        "type": "string",
+        "minLength": 10,
+        "description": "what does not map cleanly and which reading you chose, without forcing a label"
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

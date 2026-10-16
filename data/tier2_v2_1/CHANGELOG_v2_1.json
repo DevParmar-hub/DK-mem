@@ -1,0 +1,1325 @@
+[
+ {
+  "spec_id": "t2s_v2_0109",
+  "language": "hi",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "test",
+  "reason": "both sides carried the same city, so QA could not tell the two addressees apart; b's city changed (gold unchanged)",
+  "linguistic_confidence": "high",
+  "needs_native_review": false,
+  "before": {
+   "text_b": "Rahul, tu Delhi kab ja raha hai",
+   "fact_b": {
+    "attribute": "travel_city",
+    "value": "Delhi"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Sharma uncle Delhi kab ja rahe hain?",
+     "slots": [
+      [
+       "delhi",
+       "दिल्ली"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Rahul Delhi kab ja raha hai?",
+     "slots": [
+      [
+       "delhi",
+       "दिल्ली"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "Rahul, tu Pune kab ja raha hai",
+   "fact_b": {
+    "attribute": "travel_city",
+    "value": "Pune"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Sharma uncle kahan ja rahe hain?",
+     "slots": [
+      [
+       "delhi",
+       "दिल्ली"
+      ]
+     ],
+     "forbidden": [
+      [
+       "pune",
+       "पुणे"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Rahul kahan ja raha hai?",
+     "slots": [
+      [
+       "pune",
+       "पुणे"
+      ]
+     ],
+     "forbidden": [
+      [
+       "delhi",
+       "दिल्ली"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0111",
+  "language": "hi",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "same arrival place on both sides; b's place changed",
+  "linguistic_confidence": "high",
+  "needs_native_review": false,
+  "before": {
+   "text_b": "Bhai, tu school kab aayega",
+   "fact_b": {
+    "attribute": "arrival_place",
+    "value": "school"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Principal sahab school kab aayenge?",
+     "slots": [
+      [
+       "school"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Bhai school kab aayega?",
+     "slots": [
+      [
+       "school"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "Bhai, tu college kab aayega",
+   "fact_b": {
+    "attribute": "arrival_place",
+    "value": "college"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Principal sahab kahan aayenge?",
+     "slots": [
+      [
+       "school",
+       "स्कूल"
+      ]
+     ],
+     "forbidden": [
+      [
+       "college",
+       "कॉलेज"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Bhai kahan aayega?",
+     "slots": [
+      [
+       "college",
+       "कॉलेज"
+      ]
+     ],
+     "forbidden": [
+      [
+       "school",
+       "स्कूल"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0112",
+  "language": "hi",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "answer alias 'dekhi' was a verb form present on both sides; the viewed item now differs and is the answer",
+  "linguistic_confidence": "high",
+  "needs_native_review": false,
+  "before": {
+   "text_b": "Yaar, tune report dekhi",
+   "fact_a": {
+    "attribute": "report_status",
+    "value": "dekhi"
+   },
+   "fact_b": {
+    "attribute": "report_status",
+    "value": "dekhi"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Doctor sahab ne report dekhi kya?",
+     "slots": [
+      [
+       "dekhi",
+       "haan"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Yaar ne report dekhi kya?",
+     "slots": [
+      [
+       "dekhi",
+       "haan"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "Yaar, tune photo dekhi",
+   "fact_a": {
+    "attribute": "viewed_item",
+    "value": "report"
+   },
+   "fact_b": {
+    "attribute": "viewed_item",
+    "value": "photo"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Doctor sahab ne kya dekha?",
+     "slots": [
+      [
+       "report",
+       "रिपोर्ट"
+      ]
+     ],
+     "forbidden": [
+      [
+       "photo",
+       "फोटो"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Yaar ne kya dekha?",
+     "slots": [
+      [
+       "photo",
+       "फोटो"
+      ]
+     ],
+     "forbidden": [
+      [
+       "report",
+       "रिपोर्ट"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0113",
+  "language": "hi",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "same city on both sides; b's city changed",
+  "linguistic_confidence": "high",
+  "needs_native_review": false,
+  "before": {
+   "text_b": "Chhotu, tujhe Pune jaana hai",
+   "fact_b": {
+    "attribute": "travel_city",
+    "value": "Pune"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Mishra ji ko kahan jaana hai?",
+     "slots": [
+      [
+       "pune",
+       "पुणे"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Chhotu ko kahan jaana hai?",
+     "slots": [
+      [
+       "pune",
+       "पुणे"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "Chhotu, tujhe Nagpur jaana hai",
+   "fact_b": {
+    "attribute": "travel_city",
+    "value": "Nagpur"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Mishra ji ko kahan jaana hai?",
+     "slots": [
+      [
+       "pune",
+       "पुणे"
+      ]
+     ],
+     "forbidden": [
+      [
+       "nagpur",
+       "नागपुर"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Chhotu ko kahan jaana hai?",
+     "slots": [
+      [
+       "nagpur",
+       "नागपुर"
+      ]
+     ],
+     "forbidden": [
+      [
+       "pune",
+       "पुणे"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0115",
+  "language": "hi",
+  "relation": "different",
+  "class": "contextual_qualifier",
+  "origin_split": "dev",
+  "reason": "the question named the city it asked for and the sentences differed in nothing else; a call weekday (v1 attribute) is added to both sides",
+  "linguistic_confidence": "high",
+  "needs_native_review": false,
+  "before": {
+   "text_a": "Amit jo Delhi mein rehta hai uska phone aaya",
+   "text_b": "अमित जो Mumbai mein rehta hai uska phone aaya",
+   "fact_a": {
+    "attribute": "residence_city",
+    "value": "Delhi"
+   },
+   "fact_b": {
+    "attribute": "residence_city",
+    "value": "Mumbai"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Delhi wale Amit ka phone kab aaya?",
+     "slots": [
+      [
+       "delhi",
+       "दिल्ली"
+      ]
+     ],
+     "forbidden": [
+      [
+       "mumbai",
+       "मुंबई"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Mumbai wale Amit ka phone kab aaya?",
+     "slots": [
+      [
+       "mumbai",
+       "मुंबई"
+      ]
+     ],
+     "forbidden": [
+      [
+       "delhi",
+       "दिल्ली"
+      ]
+     ]
+    }
+   ]
+  },
+  "after": {
+   "text_a": "Amit jo Delhi mein rehta hai uska phone somvar ko aaya",
+   "text_b": "अमित जो Mumbai mein rehta hai uska phone shukravar ko aaya",
+   "fact_a": {
+    "attribute": "call_day",
+    "value": "somvar"
+   },
+   "fact_b": {
+    "attribute": "call_day",
+    "value": "shukravar"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Delhi wale Amit ka phone kis din aaya?",
+     "slots": [
+      [
+       "somvar",
+       "सोमवार"
+      ]
+     ],
+     "forbidden": [
+      [
+       "shukravar",
+       "शुक्रवार"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Mumbai wale Amit ka phone kis din aaya?",
+     "slots": [
+      [
+       "shukravar",
+       "शुक्रवार"
+      ]
+     ],
+     "forbidden": [
+      [
+       "somvar",
+       "सोमवार"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0129",
+  "language": "mr",
+  "relation": "same",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "gold-same pair carried an identical fact on both sides and the question contained it; each side now carries a different city and the question needs both",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_a": "आई, तू कधी येणार",
+   "text_b": "आई, तुम्ही कधी येणार",
+   "fact_a": {
+    "attribute": "arrival_question",
+    "value": "kadhi"
+   },
+   "fact_b": {
+    "attribute": "arrival_question",
+    "value": "kadhi"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Aai kadhi yenar?",
+     "slots": [
+      [
+       "kadhi",
+       "कधी"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_a": "आई, तू Pune ला कधी येणार",
+   "text_b": "आई, तुम्ही Nashik ला कधी येणार",
+   "fact_a": {
+    "attribute": "visit_city",
+    "value": "Pune"
+   },
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Nashik"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Aai kuthe kuthe yenar?",
+     "slots": [
+      [
+       "pune",
+       "पुणे"
+      ],
+      [
+       "nashik",
+       "नाशिक"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0130",
+  "language": "mr",
+  "relation": "same",
+  "class": "honorific_register",
+  "origin_split": "test",
+  "reason": "as 0129",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "बाबा, तुम्ही Pune ला गेलात का",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Pune"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Baba Pune la gele ka?",
+     "slots": [
+      [
+       "pune",
+       "पुणे"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "बाबा, तुम्ही Nashik ला गेलात का",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Nashik"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Baba kuthe kuthe gele?",
+     "slots": [
+      [
+       "pune",
+       "पुणे"
+      ],
+      [
+       "nashik",
+       "नाशिक"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0131",
+  "language": "mr",
+  "relation": "same",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "answer 'aaji' was the vocative already in the question; no distinguishing fact existed",
+  "linguistic_confidence": "low",
+  "needs_native_review": true,
+  "before": {
+   "text_a": "आजी, तुम्ही कशा आहात",
+   "text_b": "आजी, तू कशी आहेस",
+   "fact_a": {
+    "attribute": "health_query",
+    "value": "kase"
+   },
+   "fact_b": {
+    "attribute": "health_query",
+    "value": "kashi"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Aaji kashi aahe?",
+     "slots": [
+      [
+       "aaji",
+       "आजी"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_a": "आजी, तुम्ही Pune मधे कशा आहात",
+   "text_b": "आजी, तू Mumbai मधे कशी आहेस",
+   "fact_a": {
+    "attribute": "location",
+    "value": "Pune"
+   },
+   "fact_b": {
+    "attribute": "location",
+    "value": "Mumbai"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Aaji kuthe kuthe aahe?",
+     "slots": [
+      [
+       "pune",
+       "पुणे"
+      ],
+      [
+       "mumbai",
+       "मुंबई"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0132",
+  "language": "mr",
+  "relation": "same",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "as 0129",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "विकास काका, तू Mumbai ला आलास का",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Mumbai"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Vikas kaka Mumbai la aale ka?",
+     "slots": [
+      [
+       "mumbai",
+       "मुंबई"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "विकास काका, तू Nashik ला आलास का",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Nashik"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Vikas kaka kuthe kuthe aale?",
+     "slots": [
+      [
+       "mumbai",
+       "मुंबई"
+      ],
+      [
+       "nashik",
+       "नाशिक"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0133",
+  "language": "mr",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "test",
+  "reason": "same place on both sides; b's place changed",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "रवी, तू office ला कधी येणार",
+   "fact_b": {
+    "attribute": "arrival_place",
+    "value": "office"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Saheb office la kadhi yenar?",
+     "slots": [
+      [
+       "office"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Ravi office la kadhi yenar?",
+     "slots": [
+      [
+       "office"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "रवी, तू college ला कधी येणार",
+   "fact_b": {
+    "attribute": "arrival_place",
+    "value": "college"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Saheb kuthe yenar?",
+     "slots": [
+      [
+       "office",
+       "ऑफिस"
+      ]
+     ],
+     "forbidden": [
+      [
+       "college",
+       "कॉलेज"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Ravi kuthe yenar?",
+     "slots": [
+      [
+       "college",
+       "कॉलेज"
+      ]
+     ],
+     "forbidden": [
+      [
+       "office",
+       "ऑफिस"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0134",
+  "language": "mr",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "test",
+  "reason": "same requested item on both sides; b's item changed (loan noun assumed masculine like 'report', agreement 'हवा' kept)",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "सीमा ताई, तुला report हवा आहे का",
+   "fact_b": {
+    "attribute": "request",
+    "value": "report"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Joshi madam la report hava aahe ka?",
+     "slots": [
+      [
+       "report"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Seema tai la report hava aahe ka?",
+     "slots": [
+      [
+       "report"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "सीमा ताई, तुला photo हवा आहे का",
+   "fact_b": {
+    "attribute": "request",
+    "value": "photo"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Joshi madam la kay hava aahe?",
+     "slots": [
+      [
+       "report",
+       "रिपोर्ट"
+      ]
+     ],
+     "forbidden": [
+      [
+       "photo",
+       "फोटो"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Seema tai la kay hava aahe?",
+     "slots": [
+      [
+       "photo",
+       "फोटो"
+      ]
+     ],
+     "forbidden": [
+      [
+       "report",
+       "रिपोर्ट"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0135",
+  "language": "mr",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "test",
+  "reason": "same event on both sides; b's event changed",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "राहुल, तू meeting ला येशील का",
+   "fact_b": {
+    "attribute": "event",
+    "value": "meeting"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Sharma sir meeting la yetil ka?",
+     "slots": [
+      [
+       "meeting"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Rahul meeting la yeil ka?",
+     "slots": [
+      [
+       "meeting"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "राहुल, तू class ला येशील का",
+   "fact_b": {
+    "attribute": "event",
+    "value": "class"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Sharma sir kuthe yetil?",
+     "slots": [
+      [
+       "meeting",
+       "मीटिंग"
+      ]
+     ],
+     "forbidden": [
+      [
+       "class",
+       "क्लास"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Rahul kuthe yeil?",
+     "slots": [
+      [
+       "class",
+       "क्लास"
+      ]
+     ],
+     "forbidden": [
+      [
+       "meeting",
+       "मीटिंग"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0152",
+  "language": "gu",
+  "relation": "same",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "gold-same pair carried an identical fact on both sides and the question contained it; b's city changed, question needs both",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "બા, તું Ahmedabad ક્યારે આવીશ",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Ahmedabad"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Ba Ahmedabad kyare aavse?",
+     "slots": [
+      [
+       "ahmedabad",
+       "અમદાવાદ"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "બા, તું Surat ક્યારે આવીશ",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Surat"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Ba kyan kyan aavse?",
+     "slots": [
+      [
+       "ahmedabad",
+       "અમદાવાદ"
+      ],
+      [
+       "surat",
+       "સુરત"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0153",
+  "language": "gu",
+  "relation": "same",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "as 0152",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "પપ્પા, તું Delhi ગયો હતો",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Delhi"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Pappa Delhi gaya hata?",
+     "slots": [
+      [
+       "delhi",
+       "દિલ્હી"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "પપ્પા, તું Mumbai ગયો હતો",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Mumbai"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Pappa kyan kyan gaya hata?",
+     "slots": [
+      [
+       "delhi",
+       "દિલ્હી"
+      ],
+      [
+       "mumbai",
+       "મુંબઈ"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0154",
+  "language": "gu",
+  "relation": "same",
+  "class": "honorific_register",
+  "origin_split": "test",
+  "reason": "identical action on both sides; b's light-verb object changed (phone->message)",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "રમેશ દાદા, તું phone ક્યારે કરીશ",
+   "fact_a": {
+    "attribute": "action",
+    "value": "phone"
+   },
+   "fact_b": {
+    "attribute": "action",
+    "value": "phone"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Ramesh dada phone kyare karse?",
+     "slots": [
+      [
+       "phone"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "રમેશ દાદા, તું message ક્યારે કરીશ",
+   "fact_a": {
+    "attribute": "action",
+    "value": "phone"
+   },
+   "fact_b": {
+    "attribute": "action",
+    "value": "message"
+   },
+   "qa": [
+    {
+     "role": "ab",
+     "question": "Ramesh dada shu shu karse?",
+     "slots": [
+      [
+       "phone",
+       "ફોન"
+      ],
+      [
+       "message",
+       "મેસેજ"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0155",
+  "language": "gu",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "test",
+  "reason": "same city on both sides; b's city changed",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "ભાઈ, તું Surat ક્યારે આવીશ",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Surat"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Sheth Surat kyare aavse?",
+     "slots": [
+      [
+       "surat",
+       "સુરત"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Bhai Surat kyare aavse?",
+     "slots": [
+      [
+       "surat",
+       "સુરત"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "ભાઈ, તું Rajkot ક્યારે આવીશ",
+   "fact_b": {
+    "attribute": "visit_city",
+    "value": "Rajkot"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Sheth kyan aavse?",
+     "slots": [
+      [
+       "surat",
+       "સુરત"
+      ]
+     ],
+     "forbidden": [
+      [
+       "rajkot",
+       "રાજકોટ"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Bhai kyan aavse?",
+     "slots": [
+      [
+       "rajkot",
+       "રાજકોટ"
+      ]
+     ],
+     "forbidden": [
+      [
+       "surat",
+       "સુરત"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0156",
+  "language": "gu",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "same item on both sides; b's item changed ('જોઈએ' is invariant)",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "યાર, તને report જોઈએ છે",
+   "fact_b": {
+    "attribute": "request",
+    "value": "report"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Saheb ne report joiye che?",
+     "slots": [
+      [
+       "report"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Yaar ne report joiye che?",
+     "slots": [
+      [
+       "report"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "યાર, તને photo જોઈએ છે",
+   "fact_b": {
+    "attribute": "request",
+    "value": "photo"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Saheb ne shu joiye che?",
+     "slots": [
+      [
+       "report",
+       "રિપોર્ટ"
+      ]
+     ],
+     "forbidden": [
+      [
+       "photo",
+       "ફોટો"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Yaar ne shu joiye che?",
+     "slots": [
+      [
+       "photo",
+       "ફોટો"
+      ]
+     ],
+     "forbidden": [
+      [
+       "report",
+       "રિપોર્ટ"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "spec_id": "t2s_v2_0157",
+  "language": "gu",
+  "relation": "different",
+  "class": "honorific_register",
+  "origin_split": "dev",
+  "reason": "same object on both sides; b's object changed",
+  "linguistic_confidence": "medium",
+  "needs_native_review": true,
+  "before": {
+   "text_b": "દોસ્ત, તેં homework check કર્યું",
+   "fact_b": {
+    "attribute": "action",
+    "value": "homework check"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Teacher e homework check karyu?",
+     "slots": [
+      [
+       "homework"
+      ]
+     ],
+     "forbidden": []
+    },
+    {
+     "role": "b",
+     "question": "Dost e homework check karyu?",
+     "slots": [
+      [
+       "homework"
+      ]
+     ],
+     "forbidden": []
+    }
+   ]
+  },
+  "after": {
+   "text_b": "દોસ્ત, તેં paper check કર્યું",
+   "fact_b": {
+    "attribute": "action",
+    "value": "paper check"
+   },
+   "qa": [
+    {
+     "role": "a",
+     "question": "Teacher e shu check karyu?",
+     "slots": [
+      [
+       "homework",
+       "હોમવર્ક"
+      ]
+     ],
+     "forbidden": [
+      [
+       "paper",
+       "પેપર"
+      ]
+     ]
+    },
+    {
+     "role": "b",
+     "question": "Dost e shu check karyu?",
+     "slots": [
+      [
+       "paper",
+       "પેપર"
+      ]
+     ],
+     "forbidden": [
+      [
+       "homework",
+       "હોમવર્ક"
+      ]
+     ]
+    }
+   ]
+  }
+ }
+]

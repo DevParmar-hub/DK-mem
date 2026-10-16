@@ -1,0 +1,42 @@
+% DK-Mem paper -- integration file. OWNER: P1 (lead). Compile with XeLaTeX (Overleaf: Menu > Compiler > XeLaTeX) for Devanagari/Gujarati.
+% Each section lives in its own file with ONE owner (see TEAM_PLAN.md); nobody edits another owner's file.
+% All numbers come from \input{generated/...}; never type a result by hand.
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{fontspec}
+\newfontfamily\devafont{Noto Sans Devanagari}[Script=Devanagari]
+\newfontfamily\gujrfont{Noto Sans Gujarati}[Script=Gujarati]
+\newcommand{\dev}[1]{{\devafont #1}}
+\newcommand{\guj}[1]{{\gujrfont #1}}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{natbib}
+
+% ---- generated numbers (paper/tools/make_numbers.py, paper/tools/summarize_reviews.py)
+\input{generated/numbers.tex}
+\IfFileExists{generated/review_summary.tex}{\input{generated/review_summary.tex}}{}
+
+% ---- drafting helpers: remove before submission (tools/check_paper.py fails while any \todo remains)
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\title{DK-Mem: Gating Memory Consolidation on Distinction Features\\for Indic-Language Personal Assistants\\\large A Preliminary Study}
+\author{\todo{author names and affiliations}}
+\date{}
+
+\begin{document}
+\maketitle
+\input{sections/abstract}
+\input{sections/intro}
+\input{sections/related}
+\input{sections/method}
+\input{sections/benchmark}
+\input{sections/results}
+\input{sections/limitations}
+\bibliographystyle{plainnat}
+\bibliography{refs}
+\appendix
+\input{sections/reproducibility}
+\end{document}

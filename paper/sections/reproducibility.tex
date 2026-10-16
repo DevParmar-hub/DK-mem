@@ -1,0 +1,17 @@
+% OWNER: P1 (lead). Appendix. Sources: DKMEM_IMPLEMENTATION.md, eval/tier2/judge_host.py, eval/tier2/judge_provenance.py,
+% eval/tier2/embedder_pin.py, eval/tier2/entity_report_verified.py, tests/test_store_regression.py.
+\section{Reproducibility and Evaluation Integrity}
+\label{app:repro}
+
+\paragraph{Frozen artefacts.} \todo{P1: FROZEN\_v1.0 and v1.1m benchmark files; pre-registered analysis plan pinned by sha256 before any
+full-run output existed; the entity report regenerates byte-for-byte from the stored runs.}
+
+\paragraph{A silent judge substitution.} \todo{P1: the first full run imported a judge from an external module that reused the frozen prompt
+id with a different prompt and answer vocabulary; all 3105 answers were the constant string "different". Lesson: identify prompts by
+content hash, not by id.}
+
+\paragraph{Independent verification.} \todo{P1: every judge-log row is checked against the manifest's prompt id and sha256 and its raw output
+is re-parsed with the strict parser; the embedder revision is checked against a registered pin; the official report entry point refuses
+unverified runs. All 10 current judge logs and 28 manifests verify.}
+
+\paragraph{Code and tests.} \todo{P1: test-suite size at submission; regression replay of the frozen Tier-1 runs through the store path.}

@@ -34,6 +34,24 @@ results/
 teamB_answer_key.jsonl
 *answer_key*.jsonl
 
+# Tier-2 (controlled injection benchmark) evaluator-only files. They hold relation labels, answer aliases or ids that
+# join back to Team B's key; the system under test and the Kaggle smoke payload never receive them
+# (validation/tier2_smoke/build_kernel.py and tests/test_tier2_smoke_payload.py enforce that).
+# (pilot_selection*.json lists conversations chosen by relation/class, with Tier-1 pair ids.)
+# Their integrity stays pinned by sha256 in eval/tier2/FROZEN_v1.0.json. Same pattern at any depth.
+tier2_gold*.jsonl
+tier2_qa_reference*.jsonl
+tier2_injection_metadata*.jsonl
+pair_specs*.json
+pilot_selection*.json
+*tier2_contract_report*.json
+# the historical Tier-2 passthrough: distractor ids are a hash of the turn id, injected ids are the Tier-1 opaque ids, so the rule
+# separates injected turns from distractors (the Kaggle smoke payload generates its own uniform passthrough instead)
+eval/tier2_full_runs/t2_passthrough.jsonl
+# generated Kaggle kernel directories of the Tier-2 smoke test: rebuild with validation/tier2_smoke/build_kernel.py,
+# verify with --check; they embed a code snapshot and an evaluator-side qa id map
+validation/tier2_smoke/kernel_*/
+
 # Extraction / LLM caches
 *_cache.jsonl
 extraction_cache.jsonl
@@ -73,3 +91,16 @@ Thumbs.db
 # =========================
 .vscode/
 .idea/
+
+tier2_v2_*gold*.jsonl
+data/team_b_delivery/VERIFICATION_PROMPT.md
+
+eval/tier2.zip
+eval/tier2_entity_runs/
+eval/tier2_full_runs/
+eval/tier2_smoke_runs/
+validation/tier2_entity/kernel_*/
+data/team_b_delivery/
+# Tier-2 v2.1 repair package: held-out specs/key and evaluator-side labels stay out of git (provenance in the package manifest)
+data/tier2_v2_1/heldout_sealed/
+data/tier2_v2_1/dev/splits_v2_1.jsonl

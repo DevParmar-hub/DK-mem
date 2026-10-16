@@ -1,0 +1,12 @@
+# Replace the @handles with your GitHub usernames. GitHub then requests the owner's review on any PR that touches their files.
+# Ownership is the lossless-merge rule: each file has exactly one owner (see TEAM_PLAN.md section 1).
+*                                   @P1-LEAD
+/paper/sections/benchmark.tex       @P2-HINDI
+/paper/review/hi_*                  @P2-HINDI
+/paper/sections/method.tex          @P3-MARATHI
+/paper/figures/                     @P3-MARATHI
+/paper/review/mr_*                  @P3-MARATHI
+/paper/sections/intro.tex           @P4-GUJARATI
+/paper/sections/related.tex         @P4-GUJARATI
+/paper/sections/limitations.tex     @P4-GUJARATI
+/paper/review/gu_*                  @P4-GUJARATI

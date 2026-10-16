@@ -1,0 +1,64 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "native review record (one row per item)",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "item_id",
+  "reviewer_id",
+  "relation_correct",
+  "class_correct",
+  "natural",
+  "verdict",
+  "conflict_resolution"
+ ],
+ "properties": {
+  "item_id": {
+   "type": "string"
+  },
+  "reviewer_id": {
+   "type": "string"
+  },
+  "relation_correct": {
+   "enum": [
+    "yes",
+    "no",
+    "ambiguous"
+   ]
+  },
+  "class_correct": {
+   "enum": [
+    "yes",
+    "no"
+   ]
+  },
+  "natural": {
+   "enum": [
+    "yes",
+    "awkward",
+    "no"
+   ]
+  },
+  "identifying_or_offensive": {
+   "type": "boolean"
+  },
+  "verdict": {
+   "enum": [
+    "include",
+    "exclude"
+   ]
+  },
+  "reason": {
+   "type": "string",
+   "description": "mandatory when verdict=exclude or the item was flagged"
+  },
+  "conflict_resolution": {
+   "enum": [
+    "not_flagged",
+    "label_stands",
+    "excluded"
+   ],
+   "description": "for every item the author flagged: label_stands (reviewer confirms the author's label and reading) or excluded; reason is then mandatory"
+  }
+ }
+}

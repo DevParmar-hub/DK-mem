@@ -110,10 +110,16 @@ from dataclasses import dataclass
 
 from dkmem.memory.lexicon import Lexicon, LexiconEntry
 
-__all__ = ["Match", "find_matches", "match_distinctions"]
+__all__ = ["Match", "find_matches", "match_distinctions", "match_distinctions_multi"]
 
 # See "Suffix stem-length guard" above.
 _MIN_SUFFIX_STEM_LENGTH = 2
+
+
+def _nfc(text: str) -> str:
+    """Canonical (NFC) form, so visually identical text matches regardless of how it was composed (e.g. a Devanagari nukta
+    letter as one code point or as base + nukta). Text already in NFC, which is all of the shipped data, is unchanged."""
+    return unicodedata.normalize("NFC", text)
 
 
 def _is_trimmable(ch: str) -> bool:
@@ -137,7 +143,7 @@ def _tokenize(utterance: str) -> list[str]:
             start += 1
         while end > start and _is_trimmable(raw[end - 1]):
             end -= 1
-        token = raw[start:end]
+        token = _nfc(raw[start:end])
         if token:
             tokens.append(token)
     return tokens
@@ -153,7 +159,8 @@ def _matched_span(entry: LexiconEntry, token: str) -> str | None:
         return None
 
     token_cf = token.casefold()
-    for form in entry.surface_forms:
+    for raw_form in entry.surface_forms:
+        form = _nfc(raw_form)            # tokens are NFC (see _tokenize); compare like with like
         form_cf = form.casefold()
         if entry.match_type == "exact_word":
             if token_cf == form_cf:
@@ -215,7 +222,11 @@ def match_distinctions(lexicon: Lexicon, utterance: str, lang: str) -> dict[str,
     conflicting matched values is resolved by the tie-break rule documented
     at the top of this module. An utterance with no matches returns ``{}``.
     """
-    hits = find_matches(lexicon, utterance, lang)
+    return _resolve(find_matches(lexicon, utterance, lang))
+
+
+def _resolve(hits) -> dict[str, str]:
+    """One value per distinction class from a set of hits (tie-break rule in the module docstring)."""
     by_class: dict[str, list[Match]] = {}
     for hit in hits:
         by_class.setdefault(hit.entry.distinction_class, []).append(hit)
@@ -229,3 +240,16 @@ def match_distinctions(lexicon: Lexicon, utterance: str, lang: str) -> dict[str,
             winner = min(class_hits, key=_tie_break_key)
             result[distinction_class] = winner.entry.value
     return result
+
+
+def match_distinctions_multi(lexicon: Lexicon, utterance: str, langs) -> dict[str, str]:
+    """``match_distinctions`` over every language component of a code-mixed tag (e.g. ``["mr", "hi"]``).
+
+    All components' hits are pooled and resolved together by the same tie-break rule, so a value conflict between two languages is
+    decided deterministically and does not depend on the order of the tag's components (a per-component ``dict.update`` would let
+    whichever language came last silently win). For a single language this equals ``match_distinctions``.
+    """
+    hits: list[Match] = []
+    for lang in langs:
+        hits.extend(find_matches(lexicon, utterance, lang))
+    return _resolve(hits)

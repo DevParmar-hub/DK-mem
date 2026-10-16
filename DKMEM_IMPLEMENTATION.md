@@ -8,6 +8,8 @@ This document describes exactly what is implemented in this repository today, fi
 
 >
 > **Revision (baselines and offline evaluation, 2026-10-08).** `dkmem/baselines/` (a hash-pinned Mem0 OSS v1.0.11 reproduction and the never-merge / flat-RAG baseline), the prompt-informed merge judge `merge_judge_informed_v1` (`dkmem/memory/judge.py`) and `dkmem/eval/` (FCR/MCR per the Tier 1 contract, the exact raise-τ sweep, the DK-Mem ablation report, a fairness check) were added; see §13c and `DKMEM_BASELINES.md`. The frozen A–D behaviour is unchanged (an optional `judge_prompt` argument defaults to `merge_judge_v1` and leaves its fingerprint unchanged). Tested with fake models only: **no baseline has been run on a real model.** The memory store (`dkmem/store/`) predates this revision and is not described in this document yet.
+>
+> **Revision (Tier 2 Config C/D preparation, 2026-10-14).** Tier 2 (controlled multi-session injection benchmark) now has a runner, contract validation and a second, counter-confound benchmark arm under `eval/tier2/` (§13d). Config C on Tier 2 uses a new, separately versioned identity judge (`merge_judge_entity_t2_v2`) on **Qwen2.5-7B**, a different judge backbone from Tier 1, after Qwen2.5-3B failed two pre-registered validations. After Config D and combined C+D smoke tests, the **full Tier 2 experiment ran on 2026-10-14** on both arms (69 conversations each; C and D, gate off/lexicon; seed 0), scored with an analysis plan frozen before any full-run output existed. Results are descriptive and rest on provisional labels (§13d). Tier 1 code, frozen prompts (`merge_judge_v1` sha256 `3855ef65…` unchanged), the v1.0 benchmark and all earlier outputs are unchanged. A full Tier 1 A–D run (Qwen2.5-3B, seed 0) exists separately in `results/full_ad_3b_s0_20261010/` (key-free decision counts; see its `RESULTS_REPORT.md`); it is not summarised here.
 
 ---
 
@@ -384,13 +386,170 @@ Details, exact commands and the unresolved choices are in `DKMEM_BASELINES.md`; 
 
 - **Prompt-informed merge judge** (`merge_judge_informed_v1`, sha256 `614f2331…`). `merge_judge_v1` (sha256 `3855ef65…`, unchanged) plus one paragraph that explains cross-lingual distinctions and tells the judge to weigh them as evidence. It is advice, not a rule: there is no "always keep both" wording, so it is not a hard cannot-link constraint (that is the DK-Mem gate). The system text before the paragraph, the two chat examples and the output format are byte-identical to v1. It runs through the A–D harness (`--judge-prompt merge_judge_informed_v1 --modes off`); the gate-off rows get the strategy `prompt-informed-judge`. The prompt id and hash enter `run_config.json` and the fingerprint.
 - **Mem0 OSS v1.0.11** (`dkmem/baselines/mem0/`). Tag `v1.0.11` = commit `144627c4…`. The package is not imported: three upstream files (`memory/main.py`, `configs/prompts.py`, `memory/utils.py`) are vendored as `.py.txt`, pinned by sha256 and git blob id (the blob ids equal what GitHub reports for the tag), and verified before use; the prompts and helper functions are executed from them (with the prompt's `datetime.now()` date frozen to 2026-10-07). `Mem0Memory.add` re-implements `Memory._add_to_vector_store` for `infer=True`: one extraction call (`USER_MEMORY_EXTRACTION_PROMPT`, "record the facts in the same language"), per-fact search (`limit=5`, no threshold), id remapping to `"0".."n"`, one update call (`DEFAULT_UPDATE_MEMORY_PROMPT`), sequential ADD/UPDATE/DELETE/NONE with per-action error guards, history rows, and upstream's silent failure behaviour. Substituted: Qwen as the LLM (`response_format` cannot be enforced), bge-m3 as the embedder, in-memory vector store and history. A Tier 1 episode is two `add` calls on a fresh memory; `events.classify_pair` maps b's events to `supersede` (UPDATE/DELETE of a's memory), `keep_both` (a new memory stored), `merge` (NONE for a's memory and nothing stored), `no_entry` (an utterance gave no facts) or `host_failed` (the update step was unusable). Output: an A–D-shaped group with the single mode `off`, strategy `mem0`, and a trace holding the raw LLM input/output, retrieval hits, id mapping, every action and the history rows.
-- **Never-merge / flat dense RAG** (`dkmem/baselines/flat.py`). `NeverMergeHost` in the normal `consolidate` write path, bge-m3 retrieval and the standard export: every utterance is stored verbatim, nothing is consolidated, pairwise FCR is 0 by construction (strategy `flat-dense-rag`, `backbone: null`). For Tier 2 the same store ingests a conversation (`ingest_conversation`, host-agnostic), retrieves (`FlatRAG.retrieve`, `retrieval_report`) and answers questions (`answer_questions`, prompt `flat_qa_v1`). The Tier 2 `Turn`/`Question` records are a provisional shape: the Tier 2 data does not exist yet.
+- **Never-merge / flat dense RAG** (`dkmem/baselines/flat.py`). `NeverMergeHost` in the normal `consolidate` write path, bge-m3 retrieval and the standard export: every utterance is stored verbatim, nothing is consolidated, pairwise FCR is 0 by construction (strategy `flat-dense-rag`, `backbone: null`). For Tier 2 the same store ingests a conversation (`ingest_conversation`, host-agnostic), retrieves (`FlatRAG.retrieve`, `retrieval_report`) and answers questions (`answer_questions`, prompt `flat_qa_v1`). The Tier 2 `Turn`/`Question` records are a provisional shape: they were written before the Tier 2 data package (`eval/tier2/data/`, §13d) existed and have not been checked against it.
 - **FCR / MCR** (`dkmem/eval/metrics.py`) exactly as `tier1_eval_contract.md` §4–6: union-find over `entry_id`, denominators are all gold pairs (not-compared and no-entry pairs count as not merged), `link_unresolved` is not merged. The gold relation comes from Team B's key (`dkmem/eval/gold.py`, passed explicitly); the opaque entity ids in the sanctioned input are all distinct and are not labels.
 - **Raise-τ** (`dkmem/eval/sweep.py`). Config D only: from the logged bge-m3 cosines, every distinct score plus one point below the smallest, the host decision `score > tau`, then `apply_gate` with the logged distinctions, for each DK-Mem mode — so `off` is raise-τ and `lexicon` / `lexicon+llm` are DK-Mem on the same host. Validated against real harness runs at ten τ values in the tests. Judge groups are refused: no probability/logit thresholding is implemented. Matched-MCR comparison: `best_fcr_at_mcr`, `compare_at_matched_mcr`.
 - **DK-Mem ablation** (`dkmem/eval/ablation.py`): per group, lexicon-only vs lexicon+LLM FCR/MCR, gate activity (vetoes, unresolved links), extra LLM calls (0 for lexicon-only), the effect of the model fallback, and the paired-input invariants (same similarity score, stored texts and surface across modes).
 - **Fairness** (`dkmem/eval/fairness.py`): reads the `run_config.json` of any set of groups and reports differing inputs, pair order, seed, backbone/revision, decoding (batch size is a note), embedder and similarity metric, lexicon hash.
 - **Commands**: `python -m dkmem.baselines.cli {mem0,flat}`, `python -m dkmem.eval.cli {score,sweep,compare,ablation}`, `python -m dkmem.pipeline.cli --judge-prompt …`. `validation/abcd_first_run/build_kernel.py` can build the Kaggle notebook for each (`--baseline`, `--judge-prompt`, `--embedding-revision`) and now embeds `.txt` files (the vendored Mem0 sources).
 - `strategy` values added to what `PairwiseEvalRecord` accepts (`dkmem/tier1/io.py`): `prompt-informed-judge`, `flat-dense-rag`, `raise-tau`; they were already in the schema enums. `raise-tau` is not emitted by any runner yet: the sweep is offline and writes no `pairwise_eval` rows.
+
+---
+
+## 13d. Tier 2: injected multi-session conversations, `eval/tier2/`
+
+Status on 2026-10-14: **the full Tier 2 experiment has run on both arms** (v1.0 and mirror v1.1m; Configs C and D, gate off/lexicon; seed 0; 8 runs, all passing the contract). Results are single-seed, rest on provisional labels and are not a demonstration that DK-Mem solves false consolidation. Everything under `eval/` and `validation/tier2_*` is untracked in git (not yet committed). Tier 2 label files are git-ignored (`.gitignore`), and so are the run outputs under any `runs/` directory, by the generic `runs/` rule.
+
+### Completed work
+
+- **Benchmark v1.0** (`eval/tier2/data/`, pinned by `FROZEN_v1.0.json`; described in `eval/tier2/README.md`): 69 conversations × 6 sessions, one injected pair each (42 gold-different, 27 gold-same; kinship, honorific_register, name_variant), 111 QA questions. Labels come by construction from the provisional Tier 1 gold. The system receives only the conversations, the questions (read after consolidation) and an opaque turn → entity-id passthrough. Gold, QA references and injection metadata are evaluator-only.
+- **Runner** (`run_tier2.py`, `memory_store.py`): a persistent per-conversation store (union-find memory records; non-destructive, members joined with `" | "`) and shared bge-m3 top-5 candidate retrieval over all earlier raw entries. Configs C (LLM judge) and D (cosine `> tau`, τ 0.90 as a run-level execution value), each with gate `off`/`lexicon` (`apply_gate` veto). QA uses a fixed answerer prompt (`tier2_qa_v1`). Outputs follow the Tier 1 schema (`dataset_tier: tier2_injected_sessions`) plus sidecars: retrieval log, final store, QA answers, judge log, run info.
+- **Contract and validation** (`contract.py`): validates a run against the benchmark arm's FROZEN file, the exact passthrough file the run used, and the evaluator-side QA-id map (questions in Kaggle payloads carry opaque ids). It maps each injected pair to `merged` / `not_merged` / `retrieval_miss` / `judge_parse_error` from the **direct** record and reports `same_final_memory_record` separately. `judge_provenance.py` labels which judge a run used.
+- **History (kept unchanged).**
+  - The first full Tier 2 run (`eval/tier2_full_runs/`, 2026-10-08; provisional reports in `eval/results/`) used a harness judge that shared the id `merge_judge_v1` but not the text (sha256 `f0dc9cf7…`, 32-token budget). Its Config C is labelled invalid as Tier 1 C: 3105/3105 answers were "different".
+  - The fix (the frozen Tier 1 judge from `dkmem`, 128 tokens) was smoke-tested on 2026-10-13 (`eval/tier2_smoke_runs/t2frozen_smoke_20261013/`). The frozen "same fact" judge answered `keep_both` on 135/135 pairs, because every Tier 2 pair states different facts, so Config C was uninformative under that judge.
+- **Mirror arm v1.1m** (`eval/tier2/mirror_v1_1/`, frozen 2026-10-14T05:15Z). In v1.0, attribute pattern predicts the label: all 42 gold-different pairs share an attribute with different values; all 27 gold-same pairs differ in attribute. The mirror arm is the same 69 conversations with only member b's sentence replaced: gold-different → a different attribute; gold-same → the same attribute with a conflicting value. Labels, markers, positions and distractors are v1.0's. Combined with v1.0, relation is balanced against attribute pattern in every class × relation stratum. It has no QA. `validate_mirror.py` passes 853/853 checks. It is built from v1.0 data without reading the Tier 1 key.
+- **Config C judge, identity policy** (`judge_entity.py`): merge = the same specific person/thing/event, even with different or conflicting facts (both texts kept); keep_both = different entities, user-only overlap, or identity not supported. It has no language, kinship, register or script hint. Same strict parser and 128-token budget as Tier 1. Each validation set, its criteria and its scorer were frozen before any model run on it (`judge_validation*/FREEZE.json`). The 8 gates are identical across all three validations; probe classes are reported, not gated.
+
+| Validation (77 cases × 2 orders) | Prompt / model | Merge recall | Keep recall | Conflict | Ambiguous | Order | Attribute-shortcut (worst cell) | Result |
+|---|---|---|---|---|---|---|---|---|
+| `judge_validation/` (frozen 05:10Z) | `merge_judge_entity_t2_v1` / 3B | 0.44 | 1.00 | 0.60 | 1.00 | 0.89 | 0.10 | **failed** |
+| `judge_validation_v2/` (new set, 05:39Z) | `merge_judge_entity_t2_v2` (`36146ec0…`) / 3B | 0.846 | 0.85 | 0.85 | 0.69 | 0.81 | 0.71 | **failed** (22/154 reasons contradict the decision) |
+| `judge_validation_7b/` (new set, 06:05Z) | same v2 prompt / Qwen2.5-7B `a09a3545…`, sharded | 1.00 | 0.983 | 1.00 | 1.00 | 0.984 | 0.96 | **passed** (0 contradictions, 0 parse failures) |
+
+  Outputs and scored reports: `eval/tier2_entity_runs/judge_{validation,v2_validation,v2_7b_validation}_20261014/`. Probes on the 7B: kinship kept apart 8/8; same name in two scripts merged 6/6; German du/Sie kept apart 0/4.
+- **Separate judge and QA models** (`run_tier2.py`): `--judge-model-id/--judge-model-revision/--judge-shard/--judge-max-memory/--judge-device` and `--qa-device`. Default is unchanged: the QA model judges. C manifests record the judge's own backbone, run info, layer map and tokenizer, plus QA's run info for every config. Kaggle notebooks are built by `validation/tier2_entity/build_kernels.py`. The memory probe (`judge_validation/memory_probe.py`, `eval/tier2_entity_runs/memory_probe_20261014/`) loaded 3B QA on `cuda:0`, the 7B sharded with caps `0=5GiB,1=11GiB` (7/25 layers) and bge-m3. Peak allocated was 13.34 GiB (GPU 0) and 11.64 GiB (GPU 1) of 14.56; minimum driver-free was 0.90 GiB on GPU 0. Its 154 judge outputs were byte-identical to the 7B validation run.
+- **Smoke tests on Kaggle** (3 conversations per arm, seed 0; run before the full experiment):
+  - **Config D only:** `eval/tier2_entity_runs/d_smoke_{v10,mirror}_20261014/`, 4 runs.
+  - **Combined C + D:** `eval/tier2_entity_runs/cd7b_smoke_{v10,mirror}_20261014/`, 8 runs: C:off, C:lexicon, D:off, D:lexicon × 2 arms. C uses the v2 judge on the 7B, separate from the QA model; QA is Qwen2.5-3B `aa8e7253…` in every run.
+  - **Checks:** all notebook acceptance checks true. The contract passes all 12 runs (0 errors, 0 warnings) with the exact passthrough, QA-id map and arm-specific FROZEN file. Each output directory has a `MANIFEST.json`.
+- **Frozen analysis plan** (`analysis_plan_full_v1.md`, implemented by `entity_report.py`). `ANALYSIS_PLAN_FREEZE_v1.json` pins both, plus `contract.py` and `generate_tier2.py`; it was frozen at 2026-10-14T07:42:29Z, before any full-run output existed.
+- **Official entry point for entity reports: `python -m tier2.entity_report_verified`** (decided; the analysis plan is NOT re-frozen and `entity_report.py`, `contract.py` stay byte-identical). It re-verifies every run first (per-row judge identity, strict re-parse of each raw judge output, embedder revision against `embedder_pin.BGE_M3_REVISION`), writes no report if a run fails (unless `--allow-excluded`), runs the unchanged pinned report, and writes a `<out>.verification.json` sidecar. For the 8 stored full runs it regenerates `TIER2_FULL_entity_report_v1.json` byte-for-byte. Calling `tier2.entity_report` directly is still possible and is not protected.
+  - **Primary:** direct-pair FCR/MCR. A pair counts as merged only if the record between the two injected entries is a merge; retrieval misses and parse errors count as not merged.
+  - **Secondary:** final-memory-record outcomes, and the number of pairs joined only through intermediate entries.
+  - **Diagnostics:** distractor–distractor and injected–distractor merge rates, gate vetoes bypassed through intermediate merges, and QA split by whether the supporting memory was retrieved.
+  - **Intervals:** Wilson 95% for pair-level proportions; a conversation-cluster bootstrap for comparison-level rates and QA; paired bootstrap plus exact McNemar for contrasts (B = 10 000, seed 20261014, no multiplicity correction).
+- **Batch-composition diagnostic** (`judge_validation/batch_diagnostic.py`; `eval/tier2_entity_runs/batch_diagnostic_20261014/`). The 135 v1.0 smoke judge calls were re-judged on the 7B in three batchings:
+  - **in-situ:** reproduced the smoke judge log byte for byte (135/135);
+  - **batch size 1 and batch size 8:** gave the same decision on all 132 non-injected pairs (132/132). The raw reason wording differed in 3 and 2 calls respectively.
+  - The four user-only merges occur under every batching.
+- **Full Tier 2 run.**
+  - **Kernels:** `validation/tier2_entity/kernel_cd7b_full_{v10,mirror}`. Their payload trees equal the smoke-tested kernels' (`05b61138…` and `17bfa483…`). They passed `--check`, an independent payload inspection and a fake-model dry run over all 69 conversations.
+  - **Outputs:** `eval/tier2_entity_runs/cd7b_full_{v10,mirror}_20261014/`, each with a `MANIFEST.json` of 136 files.
+  - **Analysis:** `eval/tier2_entity_runs/TIER2_FULL_entity_report_v1.json` (sha256 `18b5d9df…`). It holds per-pair gold relations, so it is evaluator-side.
+  - **Checks:**
+    - all notebook acceptance checks are true on both arms;
+    - all 8 runs pass the contract (0 errors, 0 warnings);
+    - the judge was the pinned 7B, separate from QA, which was the pinned 3B in every run;
+    - each C run made 3105 judge calls with 0 parse failures, 0 truncated and 0 reason–decision contradictions.
+  - The first v1.0 download was truncated; a forced re-download was verified (all files parse; record counts equal the kernel's own summary).
+
+### Full-run results (69 pairs per arm: 42 gold-different, 27 gold-same; seed 0; descriptive)
+
+FCR = gold-different pairs merged / 42; MCR = gold-same pairs not merged / 27 (direct pair; 95% Wilson interval). In all 8 runs the final-memory-record outcomes equal the direct outcomes. There were 0 pairs joined only through intermediate entries, 0 retrieval misses and 0 judge parse errors.
+
+| Run | v1.0 FCR | v1.0 MCR | mirror FCR | mirror MCR |
+|---|---|---|---|---|
+| C, gate off | 15/42 = 0.357 [0.230, 0.508] | 0/27 = 0.000 [0.000, 0.125] | 11/42 = 0.262 [0.153, 0.411] | 1/27 = 0.037 [0.007, 0.183] |
+| C, gate lexicon | 7/42 = 0.167 [0.083, 0.306] | 5/27 = 0.185 [0.082, 0.367] | 9/42 = 0.214 [0.117, 0.359] | 6/27 = 0.222 [0.106, 0.408] |
+| D (τ 0.90), gate off | 5/42 = 0.119 [0.052, 0.250] | 27/27 = 1.000 [0.875, 1.000] | 0/42 = 0.000 [0.000, 0.084] | 27/27 = 1.000 |
+| D (τ 0.90), gate lexicon | 5/42 = 0.119 | 27/27 = 1.000 | 0/42 = 0.000 | 27/27 = 1.000 |
+
+- **Config C is too permissive in some cases.**
+  - Gate-off false merges on v1.0: German register 6/6, kinship 8/32, name variant 1/4. On the mirror arm: 6/6, 2/32 and 3/4.
+  - It merged nearly all gold-same pairs: MCR 0/27 on v1.0 and 1/27 on the mirror arm.
+  - It merged 146/2266 (v1.0) and 148/2281 (mirror) distractor–distractor comparisons, about 6.4–6.5%. Of these, 113 and 114 carried the reason "A is about the user; B is about the user".
+  - Injected–distractor merges were 17/770 and 14/755 with the gate off.
+  - Its decisions changed little between arms on the same source pairs. Gate off, mirror − v1.0: gold-different −0.095 [−0.214, +0.024], gold-same −0.037. So the judge does not appear to follow the attribute-pattern shortcut. This is a tentative reading from one seed.
+- **Config D is too conservative in the tested setup.**
+  - At τ 0.90 it never merged a gold-same pair (MCR 1.0 on both arms).
+  - Its only merges were 5 of the 6 German register gold-different pairs on v1.0. It merged nothing on the mirror arm, where the changed attribute lowered those pairs' cosine (mirror − v1.0: −0.119 [−0.214, −0.024], McNemar p = 0.0625).
+  - τ 0.90 is a run-level execution value, not a tuned operating point. D's low FCR comes with no merging at all, not with discrimination.
+- **The lexicon gate reduces some false merges but also blocks correct ones.**
+  - In C on v1.0 it removed all 8 kinship false merges (FCR 0.357 → 0.167; paired difference −0.190 [−0.310, −0.071], McNemar p = 0.008). But it also blocked 5 of the 7 Hindi register gold-same pairs (the register shift read as incompatible), raising MCR from 0 to 0.185.
+  - On the mirror arm: FCR 0.262 → 0.214 and MCR 0.037 → 0.222.
+  - It could not veto the German du/Sie false merges, because the lexicon has no German entries.
+  - In D it vetoed nothing: D's only host merges (the 5 German pairs on v1.0) were lexicon-compatible.
+  - 25 (v1.0) and 18 (mirror) C vetoes were issued, and none was bypassed through intermediate merges.
+- **QA (v1.0 only; the mirror arm has no QA, so QA is not compared across arms).**
+  - Accuracy: C off 90/111 = 0.811, C lexicon 91/111 = 0.820, D 91/111 = 0.820 (cluster-bootstrap intervals about ±0.07).
+  - 9 forbidden-alias hits per run.
+  - The supporting memory was retrieved for 109–111 of 111 questions.
+  - QA does not separate the configurations at this sample size.
+
+### Observed results (smoke level; 3 injected pairs per arm, not an evaluation)
+
+- **Config C (7B judge):**
+  - 135 judge calls per run: 0 parse failures, 0 truncated, output ≤ 35 tokens. C:off and C:lexicon judge outputs are byte-identical, and the gate vetoed nothing.
+  - Injected pairs in both arms:
+    - German du/Sie pair (gold different): **merged**; the gate reports `compatible` because the lexicon has no German entries.
+    - Hindi nani/dadi (gold different): kept apart; the gate reports `incompatible`.
+    - Priya / प्रिया (gold same): merged, including with conflicting birthdays in the mirror arm.
+- **Config D:** 0 merges in all runs (max cosine 0.876 on v1.0 and 0.843 on the mirror arm, below τ 0.90). Gate verdicts were 121 compatible, 13 underdetermined, 1 incompatible. v1.0 D reproduces the 2026-10-13 smoke.
+- **Retrieval:** every injected pair was compared, so there were no retrieval misses.
+- **QA (v1.0 arm only):** C 4/5, D 3/5 correct. The difference is the merged German pair, whose two questions were then both answered correctly.
+
+### Known limitations
+
+- **User-only distractor over-merging (Config C, 7B).**
+  - 4 of 100 distractor–distractor comparisons per C run were merged with the reason "A is about the user; B is about the user; same entity". Examples: "Ich muss morgens früh aufstehen" ↔ "Ich gehe oft spazieren"; "Aaj traffic mein bahut time laga" ↔ "Aajkal main roz walk par jaata hoon".
+  - **Audit: no implementation defect identified.**
+    - The payload code is byte-identical to the repository.
+    - The judge saw the verbatim turn texts, with the frozen v2 prompt on every call.
+    - Proposals equal the strict parse of the raw output, and record decisions follow proposal plus gate.
+    - Final memory records equal the union-find of the merge records.
+  - **Validation coverage gap:** the 12/12 user-only validation calls were events or plans with distinct objects. The validation set had no pair of two different routines. The same reason string also accompanies correct same-fact merges about the user, the pattern the prompt's coffee example teaches.
+  - **Hypothesis, not tested:** routine statements fall between that example and the user-only rule.
+  - **Tested (batch diagnostic):** batch composition does not cause these merges (132/132 identical decisions at batch sizes 1 and 8).
+  - **Full run:** the pattern persists at scale, at about 6.4–6.5% of distractor–distractor comparisons in C (see the full-run results above).
+- **Transitive (indirect) contamination.** Merges are transitive (union-find), and the judge and the gate only see raw entry pairs. Entries can therefore share a memory record through an intermediate entry, and a per-pair gate veto can be bypassed this way. This matches the Tier 1 cluster-path definition of "merged".
+  - **Smoke runs:** it did not occur (injected–distractor merges 0/32 per C run).
+  - **Full run:** it did not occur either. 0 injected pairs were joined only through intermediate entries, and 0 gate vetoes were bypassed. The risk remains for other data.
+- **Single seed; provisional labels; no native-speaker validation yet.** All Tier 2 numbers come from one run per configuration (seed 0). Gold labels are by construction from the provisional, LLM-annotated Tier 1 gold, and no native speaker has reviewed the Tier 2 benchmark or the judge-validation sets.
+- **Class and label are confounded.** In both arms, kinship pairs are all gold-different and Hindi register pairs all gold-same; German register pairs are all gold-different, and name variant has only 4 gold-different pairs. A class effect cannot be separated from a relation effect.
+- **Comparability.** The judge backbone (7B) differs from Tier 1 Config C (3B): Tier 2 C results are not comparable with Tier 1 C.
+- **German du/Sie.** The 7B judge treats du/Sie as one person, which is a false merge under the benchmark's contested two-addressee convention. The lexicon cannot veto it.
+- **Mirror arm.** Class × relation × language stay confounded, as in v1.0. The arm has no QA. Changing the attribute shifts cosine, so retrieval must be reported per arm. The six German replacement sentences are hand-written.
+- **Labels and authorship.** The validation sets were written by Claude, without native-speaker review. Labels inherit the provisional, LLM-annotated Tier 1 gold.
+- **GPU 0 headroom.** It is small (0.90 GiB at the probe's worst case; real QA prompts are shorter).
+- **Offline audit.** `eval/tier2/audit_offline.py` (Config D sweep) reads the Tier 1 key and expects the 69-conversation v1.0 layout. Its test (`eval/tests/test_tier2_audit_offline.py`) errors without the key at `eval/teamB_answer_key.jsonl`.
+
+### For the label audit (benchmark revision)
+
+- **What to audit.** Each v1.0 pair has two member sentences (`banks/pair_specs.json`: markers, facts, QA) and a gold relation (`data/tier2_gold.jsonl`). Both are inherited from the provisional Tier 1 gold.
+- **Contested design assumptions** (also in `eval/tier2/README.md`):
+  - the 4 name-variant gold-different pairs are read as two different people;
+  - the 6 German register pairs are read as two addressees told apart by du vs Sie;
+  - the 7 Hindi register gold-same pairs treat a register shift (tu/tum/aap) as the same addressee.
+  - The full-run decisions on these strata are the least reliable.
+- **Where the files are.** Labels, injection metadata, QA references and pair specs (both arms) are git-ignored and evaluator-only; they are shared outside git. The mirror arm reuses v1.0's labels on rewritten member-b sentences (`mirror_v1_1/banks/pair_specs_mirror.json`).
+- **Rules.**
+  - Do not edit any file pinned by `FROZEN_v1.0.json`, `FROZEN_v1.1m.json` or a `FREEZE.json`.
+  - A revised benchmark should be a new version with its own data directory and FROZEN file, so the completed v1.0/v1.1m results stay reproducible.
+  - `generate_tier2.py` and `validate_tier2.py` read the Tier 1 key; `validate_mirror.py` does not.
+
+### Pending decisions and next steps
+
+- **Label audit and revised benchmark** (Member 2). The results above should be re-read against any revised labels; nothing in this section is conclusive until then.
+- **Git.**
+  - Commit the Tier 2 code and data that are safe to share; the evaluator-only files stay out of git.
+  - Add ignore rules before staging, because these are not yet ignored:
+    - `eval/tier2_entity_runs/TIER2_FULL_entity_report*.json` (per-pair labels);
+    - `eval/tier2_full_runs/*/pairwise_eval.jsonl` (ids that join to the Tier 1 key);
+    - `validation/tier2_entity/kernel_*` and `*.evaluator/` (generated; QA-id maps);
+    - the `src/` snapshots in the output directories.
+- **Missing documentation.** There is no human-readable Tier 2 results report besides this section and the evaluator-side JSON, and no `mirror_v1_1/README.md`.
+
+### Tests and reproducibility checks
+
+- **Test suites.** `tests/test_tier2_judge.py`, `tests/test_tier2_smoke_payload.py` and `tests/test_tier2_entity.py` (45 tests) are in the root suite: 889 tests, OK, 2 skipped (last run 2026-10-14). The suite uses fake models only and never reads the Tier 1 key. `eval/tests`: 69 tests run, 1 error: the class setup of `test_tier2_audit_offline` needs the Tier 1 key at `eval/teamB_answer_key.jsonl` (key-holder only).
+- **Integrity checks (verified 2026-10-14):**
+  - every pin in `FROZEN_v1.0.json` and `FROZEN_v1.1m.json` matches;
+  - the three judge-validation freezes and `ANALYSIS_PLAN_FREEZE_v1.json` verify;
+  - all 13 output `MANIFEST.json` files (historical and new) verify unchanged;
+  - `validate_mirror.py` passes 853/853;
+  - `build_kernels.py --check` is fresh for both full kernels.
+- **Model pins:** QA Qwen2.5-3B `aa8e7253…`, judge Qwen2.5-7B `a09a3545…`, bge-m3 `5617a9f6…`, all recorded in every run manifest. The Kaggle logs came back empty.
 
 ---
 
@@ -464,17 +623,17 @@ Here Qwen's own translation is actually wrong (*chachi*/*mausi* are "aunt", not 
 | Vocabulary for configurations A–D and DK-Mem off / lexicon / lexicon+llm | **Implemented** (`dkmem/config.py`, manifest fields); the harness that runs them is §13b |
 | `supersede` (recognizing an update, not a duplicate) | **Not implemented** — schema value exists; `apply_gate` can veto a host's `supersede`, nothing here produces one |
 | Read-side distinction-aware disambiguation (query selects among entries) | **Not implemented** — no retrieval/query code exists anywhere in the repo |
-| A persistent, queryable memory store across utterances/episodes | **Not implemented** — only a verified extraction *cache* exists (§10), and Tier 1 explicitly resets per episode (§13) |
+| A persistent, queryable memory store across utterances/episodes | **Implemented for Tier 2 only** (`eval/tier2/memory_store.py`, §13d: per-conversation, non-destructive union-find records). Tier 1 still resets per episode (§13); `dkmem/store/` is not described here |
 | FCR / MCR / FCR–MCR frontier computation | **Not implemented here** — Team B computes this externally from `pairwise_eval.jsonl` |
-| Real embedding similarity (bge-m3) | **Implemented, never run on a GPU** (`BgeM3Embedder`, `cosine_metric`; unit-tested with fake vectors). Tier 1 runs 1–6 still use the `DIFFLIB_RATIO` stand-in |
-| Configurations A–D: English-forced extraction + judge (A), native-language extraction (`native_b_v1`) + judge (B), verbatim + judge (C), verbatim + bge-m3 threshold (D), each with DK-Mem off / lexicon / lexicon+llm, with a per-pair stage trace | **Implemented** (§13b), tested with fake models, a 20-record Qwen2.5-3B smoke test of A–C (`validation/smoke_abc/`) and the 173-record × 1.5B/3B/7B check of the B prompt (`validation/native_b_prefreeze/`) — **no full real-model A–D run yet** (specified in `DKMEM_FIRST_RUN.md`). Not implemented: real Mem0/A-Mem packages |
+| Real embedding similarity (bge-m3) | **Implemented and run on GPU** (revision `5617a9f6…`): Config D of the full Tier 1 A–D run (`results/full_ad_3b_s0_20261010/`) and the Tier 2 runs (§13d). Tier 1 runs 1–6 still use the `DIFFLIB_RATIO` stand-in |
+| Configurations A–D: English-forced extraction + judge (A), native-language extraction (`native_b_v1`) + judge (B), verbatim + judge (C), verbatim + bge-m3 threshold (D), each with DK-Mem off / lexicon / lexicon+llm, with a per-pair stage trace | **Implemented** (§13b), tested with fake models, a 20-record Qwen2.5-3B smoke test of A–C (`validation/smoke_abc/`) and the 173-record × 1.5B/3B/7B check of the B prompt (`validation/native_b_prefreeze/`) — a full 173-record A–D run on Qwen2.5-3B, seed 0, exists in `results/full_ad_3b_s0_20261010/` (key-free counts; scoring needs Team B's key; not summarised here). Not implemented: real Mem0/A-Mem packages |
 | Baselines: Mem0 (two prompts), A-Mem, store-surface-only, embedding-threshold, raise-τ, prompt-informed judge, flat dense RAG | **Implemented, never run on a real model** (§13c): a pinned Mem0 v1.0.11 reproduction (one prompt: Mem0's own default, which is not English-forced), the prompt-informed judge, the offline raise-τ sweep and the never-merge / flat-RAG control. The gate-off runs of Configs A–D remain the host-only rows for store-surface-only (C) and embedding-threshold (D) and use this repo's own prompt and judge. **Not implemented: A-Mem (dropped), LightMem (dropped), a Mem0 variant with an English-forced extraction prompt** |
 | FCR / MCR, the FCR–MCR frontier, fairness check | **Implemented offline** (`dkmem/eval/`), needing Team B's gold key; tested on synthetic data only |
 | Kinbank-generated kinship lexicon, name-variant entries | **Not implemented** — the lexicon is 15 Hindi entries |
-| Tier 2 (injected multi-session conversations) | **Not implemented** |
+| Tier 2 (injected multi-session conversations) | **Implemented and run once** (§13d): benchmark v1.0 + mirror arm v1.1m, runner, contract, Config C identity judge (validated on Qwen2.5-7B) and Config D (τ 0.90), gate off/lexicon. Full experiment on both arms, 2026-10-14, seed 0, provisional labels; label audit pending |
 | Tier 3 (one non-Indic kinship slice) | **Not implemented** — no non-Hindi lexicon entries; the `dataset_tier` enum value exists but no Tier 3 input/runner |
 | Memory bloat measurement | **Not implemented** |
-| Backbone sweep (1.5B/3B/7B) | **Not implemented** — only Qwen2.5-3B-Instruct has been run |
+| Backbone sweep (1.5B/3B/7B) | **Not implemented** — the A–D runs use Qwen2.5-3B-Instruct; Qwen2.5-7B is used only as the Tier 2 Config C judge (§13d) and in the Config B pre-freeze check |
 | Human-adjudicated gold labels for Tier 1 | **Not applicable yet** — current labels are explicitly "LLM-annotated, provisional" per the handoff docs |
 
 ---
@@ -493,6 +652,7 @@ Here Qwen's own translation is actually wrong (*chachi*/*mausi* are "aunt", not 
 10. **Name variants have no merge semantics.** They are extracted and reported but neither gate nor lexicon treats them; the research plan wants same-entity name variants to merge, which needs a decision (e.g. a canonical-name key) before the secondary class can be evaluated.
 11. **The Tier 1 v2 data and the six result runs are legacy-scope** (§14): 104 of 173 pairs target classes that are now out of scope, and 135 of the 933 stored rows do not validate against the current schema.
 12. **Config A–D limitations.** (a) Config D, the bge-m3 loading path and the CLI have only run against fakes; judge behaviour on real outputs is known only for the 20-record A–C smoke test, and A, C and the judge have not been run on all 173 records. (b) Config B's native prompt is ours, not Mem0's; at 1.5B it is effectively English-forced (92% of facts translated), at 7B 41% of facts change script (Hinglish → Devanagari); corruption (hand-labelled) was 74% / 18% / 23% for 1.5B / 3B / 7B and the automatic corruption signals catch only a fraction of it. (c) The pair-level setting removes candidate retrieval, so L4 is isolated only as "cosine of these two texts vs tau", not top-k retrieval collisions. (d) The judge answers merge/keep_both only (no supersede). (e) A–C rows have `threshold: null`; the similarity score there is informational. (f) `diagnose` is lexicon-relative and sees nothing the lexicon does not cover; a pair counts as a storage loss only when the stored texts collapsed. (g) Gate-off runs use the strategy labels `mem0` / `store-surface-only` / `embedding-threshold` for this repo's own pipeline, not the real packages. (h) The 7B model is sharded over two GPUs, whose numerics may differ slightly from single-GPU runs.
+13. **Tier 2 limitations** (user-only over-merging by the Config C judge, transitive contamination, judge backbone ≠ Tier 1, German du/Sie, mirror-arm confounds) are listed in §13d.
 
 ---
 
@@ -530,3 +690,9 @@ Here Qwen's own translation is actually wrong (*chachi*/*mausi* are "aunt", not 
 | `dkmem/eval/{gold,metrics,groups}.py` | The gold key, FCR/MCR per the contract, loading run groups |
 | `dkmem/eval/{sweep,ablation,fairness,cli}.py` | Raise-τ sweep and frontier, DK-Mem ablation, fairness check, the evaluation CLI |
 | `tier1_results/*/` | The six actual completed runs (legacy scope, not regenerated) |
+| `eval/tier2/{run_tier2,memory_store,contract}.py` | Tier 2 runner (separate judge / QA models), persistent store, contract validation and injected-pair mapping |
+| `eval/tier2/{judge_entity,judge_host,frozen_judge,judge_provenance}.py` | Tier 2 Config C identity judges (v1 failed; v2 frozen), allow-listed judge host, pinned prompt hashes, provenance labels |
+| `eval/tier2/judge_validation{,_v2,_7b}/` | Frozen judge-validation sets, criteria, scorers, freeze records; `run_cases.py`, `memory_probe.py` |
+| `eval/tier2/mirror_v1_1/` | Mirror (counter-confound) benchmark arm v1.1m: bank, generator, validator, frozen data |
+| `validation/tier2_entity/build_kernels.py` | Kaggle notebooks for judge validation, the memory probe and Tier 2 runs (per arm, C+D or D only) |
+| `eval/tier2_entity_runs/*/` | Downloaded validation, probe and smoke outputs (each with `MANIFEST.json`) |

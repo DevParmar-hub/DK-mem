@@ -1,0 +1,263 @@
+{
+ "bank_version": "2.1",
+ "status": "UNREVIEWED: mr/gu hand-authored by Claude, no native-speaker review; neutral content only",
+ "description": "Marathi and Gujarati distractor turns for the Tier-2 v2 generator. Neutral daily-life statements, no kinship term, register pronoun, personal name, city, weekday, month or QA value of any spec. Half native script, half Roman, mirroring the injected turns. Assistant turns are the Hindi bank's language-neutral English acknowledgements, reused verbatim. Hindi = the frozen v1 Hindi bank minus the turns in hi_user_turns_dropped (they contain a v2 QA value: 'meeting', 'class'); German is out of v2.",
+ "hi_user_turns_dropped": [
+  "Kal ek meeting aage badh gayi",
+  "Maine online class ke liye register kiya hai"
+ ],
+ "user_turns": {
+  "hi": [
+   "Aaj din bhar kaam mein laga raha",
+   "Kal shayad baarish hogi",
+   "Maine naye earbuds order kiye hain",
+   "Weekend par movie dekhne jaana hai",
+   "Dinner mein paneer banaya tha",
+   "Mujhe subah jaldi uthna padta hai",
+   "Aajkal main roz walk par jaata hoon",
+   "Meri laptop ki battery bahut jaldi khatam ho jaati hai",
+   "Kal raat ko mujhe neend nahi aayi",
+   "Maine ek nayi kitaab padhna shuru ki hai",
+   "Canteen ki chai theek-thaak hai",
+   "Mujhe chai bahut pasand hai",
+   "Is mahine ka bijli ka bill kaafi zyada hai",
+   "Gaadi ki service karwani hai",
+   "Mere paas ek purani cycle hai",
+   "Aaj traffic mein bahut time laga",
+   "Maine kasrat karna shuru kiya hai",
+   "Naya TV kharidne ka soch raha hoon",
+   "Mujhe cricket dekhna achha lagta hai",
+   "Raat ko main aksar gaane sunta hoon",
+   "Kamre ki safai karni hai",
+   "Aaj dopahar ko halki si dhoop thi",
+   "Mujhe nayi recipe try karni hai",
+   "Meri water bottle kho gayi",
+   "Printer phir se kharab ho gaya",
+   "Mujhe bageeche mein paudhe lagane hain",
+   "Aaj lunch mein khichdi khayi",
+   "Internet bahut slow chal raha hai",
+   "Mujhe naya bag lena hai",
+   "Main shaam ko park mein tehelta hoon",
+   "Subah ki chai thandi ho gayi",
+   "Maine kuch purani photos dekhi",
+   "Aajkal hawa mein thandak hai",
+   "Mujhe kuch saaman kharidna hai"
+  ],
+  "mr": [
+   "आज दिवसभर खूप काम होतं",
+   "उद्या कदाचित पाऊस पडेल",
+   "मी नवीन इअरबड्स मागवले आहेत",
+   "रात्रीच्या जेवणाला पनीर केलं होतं",
+   "मला सकाळी लवकर उठावं लागतं",
+   "सध्या मी रोज फिरायला जातो",
+   "माझ्या लॅपटॉपची बॅटरी लवकर संपते",
+   "आज चहा थोडा जास्त झाला",
+   "मला नवीन पुस्तक वाचायचं आहे",
+   "घरी नवीन झाड लावलं आहे",
+   "आज खूप गरमी होत आहे",
+   "मी संध्याकाळी थोडा व्यायाम करतो",
+   "भाजी घ्यायला बाजारात जायचं आहे",
+   "मोबाईलचा चार्जर सापडत नाहीये",
+   "आज रात्री लवकर झोपायचं आहे",
+   "Aaj divasbhar khup kaam hota",
+   "Mala ek navin gaana aavadla aahe",
+   "Sandhyakali chaha pyaycha aahe",
+   "Mi ata jevan banvat aahe",
+   "Ya mahinyat khup paus padla",
+   "Mala nave shoes ghyayche aahet",
+   "Aajkal mi roj cycle chalvto",
+   "Wifi khup halu chalat aahe",
+   "Mala ek chhota break ghyaycha aahe",
+   "Aaj bhaji khup chhan zali",
+   "Mi navin recipe try keli",
+   "Ratri film baghayche aahe",
+   "Mala thoda ukaadha vatat aahe",
+   "Aaj sakali lavkar uthlo",
+   "Ghari nave curtains lavle aahet"
+  ],
+  "gu": [
+   "આજે આખો દિવસ કામ રહ્યું",
+   "કાલે કદાચ વરસાદ પડશે",
+   "મેં નવા ઇયરબડ્સ મંગાવ્યા છે",
+   "રાત્રે જમવામાં પનીર બનાવ્યું હતું",
+   "મારે સવારે વહેલા ઊઠવું પડે છે",
+   "હમણાં હું રોજ ફરવા જાઉં છું",
+   "મારા લેપટોપની બેટરી જલદી ખતમ થઈ જાય છે",
+   "આજે ચા થોડી વધારે થઈ ગઈ",
+   "મારે નવું પુસ્તક વાંચવું છે",
+   "ઘરે નવો છોડ વાવ્યો છે",
+   "આજે બહુ ગરમી છે",
+   "હું સાંજે થોડી કસરત કરું છું",
+   "શાક લેવા બજારમાં જવું છે",
+   "મોબાઇલનું ચાર્જર મળતું નથી",
+   "આજે રાત્રે વહેલા સૂવું છે",
+   "Aaje divas bhar kaam rahyu",
+   "Mane ek navu gaanu gamyu che",
+   "Saanje chaa pivi che",
+   "Hu hamna jaman banavu chu",
+   "Aa mahine ghano varsaad padyo",
+   "Mare nava shoes levana che",
+   "Hamna hu roj cycle chalavu chu",
+   "Wifi bahu dhimu chaale che",
+   "Mare thodo break levo che",
+   "Aaje shaak bahu saras bani",
+   "Me navi recipe try kari",
+   "Raatre film jovi che",
+   "Mane thodo thaak lagyo che",
+   "Aaje savare vahela uthyo",
+   "Gharma navi curtain lagavi che"
+  ]
+ },
+ "assistant_turns": {
+  "hi": [
+   {
+    "text": "I see. Thanks for sharing that.",
+    "language": "en"
+   },
+   {
+    "text": "Got it.",
+    "language": "en"
+   },
+   {
+    "text": "That makes sense.",
+    "language": "en"
+   },
+   {
+    "text": "Okay, noted.",
+    "language": "en"
+   },
+   {
+    "text": "Interesting. Tell me more.",
+    "language": "en"
+   },
+   {
+    "text": "Sounds good.",
+    "language": "en"
+   },
+   {
+    "text": "Alright, anything else?",
+    "language": "en"
+   },
+   {
+    "text": "Thanks for letting me know.",
+    "language": "en"
+   },
+   {
+    "text": "Achha, samajh gaya.",
+    "language": "hi"
+   },
+   {
+    "text": "Theek hai, dhanyavaad.",
+    "language": "hi"
+   },
+   {
+    "text": "Achha, aur kuch?",
+    "language": "hi"
+   },
+   {
+    "text": "Ji, bilkul.",
+    "language": "hi"
+   }
+  ],
+  "mr": [
+   {
+    "text": "I see. Thanks for sharing that.",
+    "language": "en"
+   },
+   {
+    "text": "Got it.",
+    "language": "en"
+   },
+   {
+    "text": "That makes sense.",
+    "language": "en"
+   },
+   {
+    "text": "Okay, noted.",
+    "language": "en"
+   },
+   {
+    "text": "Interesting. Tell me more.",
+    "language": "en"
+   },
+   {
+    "text": "Sounds good.",
+    "language": "en"
+   },
+   {
+    "text": "Alright, anything else?",
+    "language": "en"
+   },
+   {
+    "text": "Thanks for letting me know.",
+    "language": "en"
+   },
+   {
+    "text": "Achha, samajh gaya.",
+    "language": "hi"
+   },
+   {
+    "text": "Theek hai, dhanyavaad.",
+    "language": "hi"
+   },
+   {
+    "text": "Achha, aur kuch?",
+    "language": "hi"
+   },
+   {
+    "text": "Ji, bilkul.",
+    "language": "hi"
+   }
+  ],
+  "gu": [
+   {
+    "text": "I see. Thanks for sharing that.",
+    "language": "en"
+   },
+   {
+    "text": "Got it.",
+    "language": "en"
+   },
+   {
+    "text": "That makes sense.",
+    "language": "en"
+   },
+   {
+    "text": "Okay, noted.",
+    "language": "en"
+   },
+   {
+    "text": "Interesting. Tell me more.",
+    "language": "en"
+   },
+   {
+    "text": "Sounds good.",
+    "language": "en"
+   },
+   {
+    "text": "Alright, anything else?",
+    "language": "en"
+   },
+   {
+    "text": "Thanks for letting me know.",
+    "language": "en"
+   },
+   {
+    "text": "Achha, samajh gaya.",
+    "language": "hi"
+   },
+   {
+    "text": "Theek hai, dhanyavaad.",
+    "language": "hi"
+   },
+   {
+    "text": "Achha, aur kuch?",
+    "language": "hi"
+   },
+   {
+    "text": "Ji, bilkul.",
+    "language": "hi"
+   }
+  ]
+ }
+}

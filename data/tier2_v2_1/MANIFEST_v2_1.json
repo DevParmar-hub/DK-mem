@@ -1,0 +1,12 @@
+{
+ "version": "2.1-draft",
+ "status": "DRAFT (not frozen; no native review)",
+ "files_sha256": {
+  "banks/distractors_v2_1.json": "4029cc43ac75c81f7352efec38f8c5cb2767d4b2c0c1884757a46fdfe88e351f",
+  "CHANGELOG_v2_1.json": "8f458d3988c22cf610ae75c964d11887aa53f6b351bc179abed8b56201dd801a",
+  "dev/pair_specs_v2_1.json": "d160aa24cccf73580b9293fa5863fefed57b7726affe1856f0677da1a9fce673",
+  "dev/splits_v2_1.jsonl": "d79fa08cf7265632bf6ce1e70cf0d221a8856d495d1a4b525d833c9d72085b39",
+  "heldout_sealed/pair_specs_heldout_v1.json": "9028ae56b9abe314bb2983a14f28a88d7b8e175d890a4e28992873b99fc0c13c",
+  "heldout_sealed/splits_heldout_v1.jsonl": "cef0386478c2247726a164493c2da3c1dc6467f5aef6fbff77f8d6d40f67ebe5"
+ }
+}

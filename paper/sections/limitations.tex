@@ -1,0 +1,22 @@
+% OWNER: P4 (Gujarati native), with one paragraph each from P2 (Hindi linguistics) and P3 (Marathi/lexicon): add yours as a separate
+% \paragraph block at the end of this file in your own PR (append-only, so merges do not conflict). ~400 words total.
+% This section is what makes the paper honest; do not shorten it to fit page limits -- cut elsewhere.
+\section{Limitations and Ethics}
+\label{sec:limits}
+
+\paragraph{Scale and seeds.} One seed with greedy decoding; 36 Hindi gold-different and 27 gold-same pairs; wide intervals.
+\todo{P4: state that greedy decoding makes reruns identical, so uncertainty here is over pairs, not sampling.}
+
+\paragraph{No held-out test set.} \todo{P4: all numbers are development results; the planned independent test set (Sec.~\ref{app:repro})
+is not built yet.}
+
+\paragraph{Constructed data and conventions.} \todo{P4: templated sentences; labelling conventions; the v1 kinship city/weekday confound.}
+
+\paragraph{Languages.} \todo{P4: results are Hindi-only; Marathi/Gujarati items exist with in-team review but were not evaluated; the
+judge's behaviour in those languages is unvalidated.}
+
+\paragraph{Lexicon.} \todo{P3: 15 Hindi entries; context-free; the reflexive \emph{apne aap} is tagged as the polite pronoun (affects 0 of
+46{,}106 frozen benchmark strings); proposed Marathi/Gujarati entries are unreviewed proposals.}
+
+\paragraph{Ethics.} \todo{P4: no personal data; constructed sentences; kinship-based assumptions; risk of encoding normative family
+structures.}

@@ -52,7 +52,7 @@ from typing import Any, Mapping
 from dkmem.memory.extract import _parse_lang_tag
 from dkmem.memory.gate import DEFAULT_DISCRIMINATIVE_FEATURES, MERGING_DECISIONS, compatible
 from dkmem.memory.lexicon import Lexicon
-from dkmem.memory.matcher import match_distinctions
+from dkmem.memory.matcher import match_distinctions_multi
 from dkmem.memory.native_extract import script_shares
 
 __all__ = [
@@ -172,10 +172,7 @@ def normalize_text(text: str) -> str:
 
 def lexicon_distinction(lexicon: Lexicon, text: str, lang: str) -> dict[str, str]:
     """The lexicon's distinction dict for ``text`` (same convention as ``extract_lexicon_only``)."""
-    result: dict[str, str] = {}
-    for component in _parse_lang_tag(lang):
-        result.update(match_distinctions(lexicon, text, component))
-    return result
+    return match_distinctions_multi(lexicon, text, _parse_lang_tag(lang))
 
 
 def distinction_visibility(

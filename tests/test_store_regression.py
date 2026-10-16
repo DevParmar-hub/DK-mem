@@ -21,14 +21,22 @@ similarity is the real ``DEFAULT_SIMILARITY`` (difflib), unchanged.
 
 The frozen results are gitignored, so this test is skipped where ``results/abcd_3b_s0`` is absent.
 
+All six frozen groups were written before ``lexicon_llm_policy`` existed, so mode ``lexicon+llm`` (whose cascade changed) cannot be
+replayed by today's code. That used to skip the WHOLE class, leaving the store, gate, retrieval and export path without any
+end-to-end regression. Modes ``off`` and ``lexicon`` do not depend on the cascade, so they are replayed for those groups and only
+``lexicon+llm`` is left out, with the reason recorded (``legacy_unreplayed``). A group that does carry the policy is replayed in
+every mode.
+
 Run: python -m unittest discover -s tests
 """
 
 import json
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from dkmem.backends.llm import GenerationParams
+from dkmem.memory.gate import GateResult, compatible
 from dkmem.memory.lexicon import load_lexicon
 from dkmem.memory.schema import Extraction
 from dkmem.memory.similarity import DEFAULT_SIMILARITY, SimilarityMetric
@@ -103,8 +111,11 @@ def v4_from_trace(block, utterance, side, seed):
     )
 
 
-def replay_group(group_dir, lexicon, gold):
+def replay_group(group_dir, lexicon, gold, modes=None):
+    """Replay one frozen group through the store path. ``modes`` restricts the replayed modes (default: all the group recorded)."""
     rc = json.loads((group_dir / "run_config.json").read_text(encoding="utf-8"))
+    if modes is not None:
+        rc = {**rc, "dkmem_modes": list(modes)}
     trace = read_jsonl(group_dir / "trace.jsonl")
     config_id, tau, seed = rc["pipeline_config"]["config_id"], rc["tau"], rc["seed"]
     modes = rc["dkmem_modes"]
@@ -160,11 +171,52 @@ class TestStoreReproducesFrozenAD(unittest.TestCase):
             cls.gold[r.utterance_a_id] = r.opaque_entity_id_a
             cls.gold[r.utterance_b_id] = r.opaque_entity_id_b
         cls.groups = sorted(p for p in FROZEN.iterdir() if p.is_dir())
-        for g in cls.groups:  # a run from before the spec-literal lexicon+llm cascade cannot be replayed by today's code
+        cls.legacy_unreplayed = {}   # group -> modes left out, and only because the group predates lexicon_llm_policy
+        cls.replays = {}
+        for g in cls.groups:
             rc = json.loads((g / "run_config.json").read_text(encoding="utf-8"))
-            if "lexicon+llm" in rc["dkmem_modes"] and "lexicon_llm_policy" not in rc:
-                raise unittest.SkipTest(f"{g.name} predates lexicon_llm_policy (model consulted for every utterance)")
-        cls.replays = {g.name: replay_group(g, cls.lexicon, cls.gold) for g in cls.groups}
+            modes = list(rc["dkmem_modes"])
+            if "lexicon+llm" in modes and "lexicon_llm_policy" not in rc:
+                # a run from before the spec-literal lexicon+llm cascade (the model was consulted for every utterance) cannot be replayed
+                # IN THAT MODE by today's code; off and lexicon do not depend on the cascade
+                cls.legacy_unreplayed[g.name] = ["lexicon+llm"]
+                modes.remove("lexicon+llm")
+            cls.replays[g.name] = replay_group(g, cls.lexicon, cls.gold, modes)
+
+    def test_legacy_groups_are_replayed_for_off_and_lexicon_and_only_lexicon_llm_is_left_out(self):
+        compared = 0
+        for g in self.groups:
+            modes = self.replays[g.name]["rc"]["dkmem_modes"]
+            self.assertIn("off", modes, g.name)
+            self.assertIn("lexicon", modes, g.name)
+            self.assertEqual(self.legacy_unreplayed.get(g.name), ["lexicon+llm"], g.name)      # the only mode skipped, and why
+            self.assertNotIn("lexicon+llm", modes, g.name)
+            compared += len(modes)
+        self.assertGreaterEqual(compared, 12)           # 6 groups x (off, lexicon): the store path is exercised, not skipped wholesale
+
+    def test_a_perturbed_frozen_row_would_fail_the_comparison(self):
+        g = self.groups[0]
+        rep = self.replays[g.name]
+        frozen = read_jsonl(g / mode_slug("off") / "pairwise_eval.jsonl")
+        ours = [json.loads(r.to_json()) for r in rep["rows"]["off"]]
+        key = lambda r: r["record_id"]
+        self.assertEqual(sorted(ours, key=key), sorted(frozen, key=key))                 # the unperturbed comparison holds
+        for field, new in (("similarity_score", frozen[0]["similarity_score"] + 0.01),
+                           ("decision", "merge" if frozen[0]["decision"] != "merge" else "no_merge")):
+            perturbed = [dict(r) for r in frozen]
+            perturbed[0][field] = new
+            self.assertNotEqual(sorted(ours, key=key), sorted(perturbed, key=key), field)
+
+    def test_the_regression_detects_a_gate_that_stops_vetoing(self):
+        permissive = lambda proposed, da, db, features=None: GateResult(compatible(da, db), proposed, proposed, "no veto")
+        differing = 0
+        with mock.patch("dkmem.store.consolidate.apply_gate", permissive):
+            for g in self.groups:
+                broken = replay_group(g, self.lexicon, self.gold, ["lexicon"])
+                frozen = read_jsonl(g / mode_slug("lexicon") / "pairwise_eval.jsonl")
+                ours = [json.loads(r.to_json()) for r in broken["rows"]["lexicon"]]
+                differing += sorted(ours, key=lambda r: r["record_id"]) != sorted(frozen, key=lambda r: r["record_id"])
+        self.assertGreater(differing, 0, "removing the gate's veto changed no replayed row: the regression would not notice")
 
     def test_the_frozen_run_is_the_one_this_environment_can_replay(self):
         self.assertEqual(len(self.groups), 6)
@@ -186,7 +238,9 @@ class TestStoreReproducesFrozenAD(unittest.TestCase):
                     self.assertEqual(len(ours), len(frozen))
                     self.assertEqual(sorted(ours, key=lambda r: r["record_id"]), sorted(frozen, key=lambda r: r["record_id"]))
                     total += len(frozen)
-        self.assertGreater(total, 3000)  # 6 groups x 3 modes x ~172 rows
+        replayed = sum(len(self.replays[g.name]["rc"]["dkmem_modes"]) for g in self.groups)
+        self.assertGreaterEqual(replayed, 12)
+        self.assertGreater(total, 150 * replayed)  # ~172 rows per replayed group-mode (2074 for the 12 off/lexicon comparisons)
 
     def test_decisions_compatibility_and_similarity_match_the_trace(self):
         for g in self.groups:
@@ -220,6 +274,9 @@ class TestStoreReproducesFrozenAD(unittest.TestCase):
                         self.assertEqual(comp["diagnosis"], t["diagnosis"])
 
     def test_pairs_dropped_in_only_some_modes_are_skipped_writes(self):
+        if not any("lexicon+llm" in self.replays[g.name]["rc"]["dkmem_modes"] for g in self.groups):
+            self.skipTest("no frozen group is replayed in lexicon+llm (every group predates lexicon_llm_policy); "
+                          "the dropped-write case exists only in that mode")
         dropped = 0
         for g in self.groups:
             rep = self.replays[g.name]

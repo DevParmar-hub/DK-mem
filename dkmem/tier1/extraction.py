@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dkmem.memory.extract import _parse_lang_tag, derive_lang_profile
 from dkmem.memory.lexicon import Lexicon
-from dkmem.memory.matcher import match_distinctions
+from dkmem.memory.matcher import match_distinctions_multi
 from dkmem.memory.schema import SIDES, Extraction
 
 __all__ = ["NO_BACKBONE", "LEXICON_ONLY_PROMPT_ID", "extract_lexicon_only"]
@@ -40,16 +40,15 @@ def extract_lexicon_only(
     """Build an ``Extraction`` for one utterance side without any model call.
 
     ``distinction`` comes entirely from ``dkmem.memory.matcher.
-    match_distinctions``, once per ``-``-separated component of ``lang``
-    (same convention as ``dkmem_extract.apply_lexicon``). ``gloss`` and
+    match_distinctions_multi`` over the ``-``-separated components of ``lang``
+    (one pooled, order-independent resolution; same convention as
+    ``dkmem_extract.apply_lexicon``). ``gloss`` and
     ``surface`` are both the raw utterance -- see the module docstring.
     """
     if side not in SIDES:
         raise ValueError(f"side must be one of {SIDES}, got {side!r}")
 
-    distinction: dict[str, str] = {}
-    for component in _parse_lang_tag(lang):
-        distinction.update(match_distinctions(lexicon, utterance, component))
+    distinction = match_distinctions_multi(lexicon, utterance, _parse_lang_tag(lang))
 
     return Extraction(
         pair_id=pair_id,

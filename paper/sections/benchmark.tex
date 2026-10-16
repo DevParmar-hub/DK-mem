@@ -1,0 +1,26 @@
+% OWNER: P2 (Hindi native). ~800 words + 1 table. Sources: eval/tier2/README.md, eval/tier2/FROZEN_v1.0.json, eval/tier2/mirror_v1_1/,
+%   data/team_b_delivery/README.md (labelling conventions), data/tier2_v2_1/README_v2_1.md, eval/evaluation_plan_v2.md.
+% Your review task (paper/review/hi_pairs_review.csv, 63 rows) feeds the "in-team native review" paragraph via \ReviewHiPairs... macros.
+% Must disclose: constructed sentences; v1 kinship pairs also differ in city/weekday (confound); labels follow stated conventions;
+%   the evaluated arm has 63 Hindi + 6 German pairs; the Team B v2 test split was exposed and is NOT used as a test set.
+\section{Benchmark}
+\label{sec:benchmark}
+
+\paragraph{Construction.} \todo{P2: Tier-2 controlled injection: each pair = two constructed user turns injected into a 6-session conversation
+(4 turns/session, 10 distractor user turns), session distance 1/3/5; QA after the last session. 69 conversations (36 Hindi gold-different,
+27 Hindi gold-same, 6 German gold-different).}
+
+\paragraph{Labelling conventions.} \todo{P2: same name without qualifier = same person; register shift with identical vocative = same person;
+gold-same kinship pairs force identity with a shared name; a contextual qualifier overrides name identity. State that these are conventions.}
+
+\paragraph{Mirror arm.} \todo{P2: v1.1m counter-confound arm (what it controls for); same pair counts.}
+
+\paragraph{Marathi and Gujarati extension.} \todo{P2 with P3/P4: v2.1 dev package: 126 specs (hi 81, mr 23, gu 22), 18 QA-contract repairs,
+new distractor banks; not evaluated here.}
+
+\paragraph{In-team native review.} \todo{P2: report the review counts with the macros, e.g. Hindi \ReviewHiPairsCorrect{}/\ReviewHiPairsTotal{}
+judged correct, \ReviewHiPairsWrong{} wrong, \ReviewHiPairsAmbiguous{} ambiguous; Marathi \ReviewMrPairsCorrect{}/\ReviewMrPairsTotal{};
+Gujarati \ReviewGuPairsCorrect{}/\ReviewGuPairsTotal{}. Say clearly: reviewers are co-authors (not independent) and saw the labels.}
+
+\paragraph{Splits and exposure.} \todo{P2: everything reported is development data; Team B's v2 test labels were exposed in a verification
+prompt, so no held-out test set exists yet.}

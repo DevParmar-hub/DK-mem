@@ -1,0 +1,36 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "items.jsonl row (label-free, may be shown to the system after the freeze)",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "item_id",
+  "language",
+  "text_a",
+  "text_b"
+ ],
+ "properties": {
+  "item_id": {
+   "type": "string",
+   "pattern": "^ind_[0-9a-f]{12,}$",
+   "description": "opaque, random, not derived from class/language/relation or any existing id"
+  },
+  "language": {
+   "enum": [
+    "hi",
+    "mr",
+    "gu"
+   ]
+  },
+  "text_a": {
+   "type": "string",
+   "minLength": 3,
+   "maxLength": 200
+  },
+  "text_b": {
+   "type": "string",
+   "minLength": 3,
+   "maxLength": 200
+  }
+ }
+}

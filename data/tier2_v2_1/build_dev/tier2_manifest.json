@@ -1,0 +1,114 @@
+{
+ "benchmark": "DK-Mem Tier-2 controlled multi-session injection benchmark",
+ "version": "2.0",
+ "status": "DRAFT (not frozen)",
+ "statement": "Tier 2 v2 is a controlled injection benchmark built from constructed sentences; it makes no claim about the natural frequency of these distinctions in conversation. Labels are Team B's v2 labels (see the review record pinned with the FROZEN file).",
+ "seed": 20261015,
+ "generator": "eval/tier2/generate_tier2_v2.py",
+ "parameters": {
+  "n_sessions": 6,
+  "turns_per_session": 4,
+  "distances": [
+   1,
+   3,
+   5
+  ],
+  "distractor_user_turns_per_conversation": 10,
+  "qa_scoring": "all_slots_contained_and_no_forbidden_after_normalisation_v2_indic",
+  "shared_candidate_retrieval": {
+   "embedder": "BAAI/bge-m3",
+   "top_k": 5
+  },
+  "date_labels": "weekly from 2026-03-02"
+ },
+ "sources": {
+  "pair_specs_sha256": "d160aa24cccf73580b9293fa5863fefed57b7726affe1856f0677da1a9fce673",
+  "split_files_sha256": {
+   "splits_v2_1.jsonl": "d79fa08cf7265632bf6ce1e70cf0d221a8856d495d1a4b525d833c9d72085b39"
+  },
+  "distractor_banks_sha256": {
+   "data\\tier2_v2_1\\banks\\distractors_v2_1.json": "4029cc43ac75c81f7352efec38f8c5cb2767d4b2c0c1884757a46fdfe88e351f"
+  },
+  "lexicons_checked_sha256": [
+   "80310b4e61845d6ba0fc296f1a680773486e886f06c91591dd76a11c8b94a352",
+   "85a066a65c27b4dbab0206e0f896ff70eaaa36abdfc9ea0d4104334936eebfb7"
+  ],
+  "generator_sha256": "1c042698e6dd051fd9f46112e776c5e71e029c255224a233baf24a337b16c9f7",
+  "qa_norm_sha256": "1e0df9a7c364f89f81760d67e434c239d69b1f307991eca441c5337ba77ea0e2"
+ },
+ "counts": {
+  "conversations": 126,
+  "injected_pairs": 126,
+  "qa_questions": 194,
+  "by_relation": {
+   "different": 68,
+   "same": 58
+  },
+  "by_language": {
+   "gu": 22,
+   "hi": 81,
+   "mr": 23
+  },
+  "by_class": {
+   "contextual_qualifier": 12,
+   "honorific_register": 26,
+   "kinship": 60,
+   "name_variant": 28
+  },
+  "by_split": {
+   "dev": 126
+  },
+  "by_session_distance": {
+   "1": 42,
+   "3": 42,
+   "5": 42
+  },
+  "by_language_class_relation": {
+   "gu|contextual_qualifier|different": 2,
+   "gu|honorific_register|different": 3,
+   "gu|honorific_register|same": 3,
+   "gu|kinship|different": 6,
+   "gu|kinship|same": 4,
+   "gu|name_variant|same": 4,
+   "hi|contextual_qualifier|different": 8,
+   "hi|honorific_register|different": 6,
+   "hi|honorific_register|same": 7,
+   "hi|kinship|different": 32,
+   "hi|kinship|same": 8,
+   "hi|name_variant|same": 20,
+   "mr|contextual_qualifier|different": 2,
+   "mr|honorific_register|different": 3,
+   "mr|honorific_register|same": 4,
+   "mr|kinship|different": 6,
+   "mr|kinship|same": 4,
+   "mr|name_variant|same": 4
+  }
+ },
+ "files": {
+  "tier2_conversations.jsonl": {
+   "sha256": "418cfc06e57ec44333547f0e7464fe15af84d4b54b9f81d12115db959aa732ee",
+   "bytes": 411040,
+   "lines": 126
+  },
+  "tier2_injection_metadata.jsonl": {
+   "sha256": "f7dd50871083e780c9c9077bf88afc9b43ceac6fc30c2a87b7a88d9086553a97",
+   "bytes": 116708,
+   "lines": 126
+  },
+  "tier2_gold.jsonl": {
+   "sha256": "35b59c2a543be9f1b348ae352e3f83431205a5218c9417ec4afabb5e7518bb5d",
+   "bytes": 36832,
+   "lines": 126
+  },
+  "tier2_qa_questions.jsonl": {
+   "sha256": "dcae23ee75462c4d83b2ac4f88eafe312b315879be872780206dfbe0824043f1",
+   "bytes": 29001,
+   "lines": 194
+  },
+  "tier2_qa_reference.jsonl": {
+   "sha256": "57c96b4cfec8cf5741737618ed363bf2e491cfb63b12954ac7b788723a19a4ff",
+   "bytes": 75388,
+   "lines": 194
+  }
+ }
+}

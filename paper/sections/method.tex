@@ -1,0 +1,28 @@
+% OWNER: P3 (Marathi native). ~800 words + 1 figure (pipeline). Sources (read the code, not just docs):
+%   dkmem/memory/gate.py (compatible/apply_gate), dkmem/memory/matcher.py + lexicon.py + distinction_features.json/.md,
+%   dkmem/pipeline/runner.py (configs A-D), dkmem/memory/judge.py, eval/tier2/judge_entity.py (identity judge), eval/tier2/run_tier2.py.
+% Must state exactly: the gate only VETOES (merge->keep_both if incompatible, ->link_unresolved if underdetermined); it never creates a merge.
+% Must state: matcher is deliberately context-free (known false match: Hindi reflexive "apne aap" tagged as register aap; 0 frozen texts affected).
+\section{DK-Mem}
+\label{sec:method}
+
+\paragraph{Task.} \todo{P3: a memory write compares a new entry with retrieved earlier entries; decision merge/keep\_both; gold relation same/different.}
+
+\paragraph{Distinction features and the lexicon.} \todo{P3: classes kinship and register gate; name\_variant recorded but does not gate.
+v1 lexicon: 15 Hindi entries (12 kinship, 3 register), exact-word matching after NFC + casefold; code-mixed tags resolved by one pooled tie-break.}
+
+\paragraph{The compatibility gate.} \todo{P3: compatible / incompatible / underdetermined; incompatible outranks underdetermined;
+host-first application (apply\_gate). Give the rule as a small table.}
+
+\paragraph{Hosts (configurations).} \todo{P3: table of A--D: A English gloss + LLM judge; B native fact + judge; C verbatim + judge;
+D verbatim + bge-m3 cosine $>\tau$. This paper evaluates C and D on Tier 2. Judge for C: merge\_judge\_entity\_t2\_v2
+(merge = same specific person/thing/event regardless of facts), Qwen2.5-7B-Instruct, greedy decoding, strict JSON parser; an unparseable
+answer is never a decision. Note the documented convention: the standalone Tier-1 gate merges at $s \ge \tau$, every host uses $s > \tau$.}
+
+\paragraph{Memory store.} \todo{P3: Tier-2 store: one entry per user turn, bge-m3 top-5 candidate retrieval over earlier raw entries,
+non-destructive union-find records; QA answerer sees joined record texts.}
+
+\begin{figure}[t]\centering
+\todo{P3: pipeline figure (utterance -> lexicon -> store -> retrieval -> host -> gate -> record)}
+\caption{DK-Mem in front of a host merge mechanism.}\label{fig:pipeline}
+\end{figure}

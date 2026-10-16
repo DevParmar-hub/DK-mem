@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -270,7 +271,10 @@ def load_lexicon(path: str | Path) -> Lexicon:
         seen_ids.add(entry.id)
 
         for form in entry.surface_forms:
-            key = (entry.lang, entry.distinction_class, entry.match_type, form)
+            # the matcher compares NFC + casefolded text (regex patterns are applied as written), so two forms that differ only in
+            # case or composition are the same surface form and must not map to different values
+            norm = form if entry.match_type == "regex" else unicodedata.normalize("NFC", form).casefold()
+            key = (entry.lang, entry.distinction_class, entry.match_type, norm)
             prior = seen_surface.get(key)
             if prior is not None and prior != entry.value:
                 raise LexiconError(

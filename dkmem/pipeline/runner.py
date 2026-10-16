@@ -98,7 +98,7 @@ from dkmem.memory.extract import (
     extract_many,
 )
 from dkmem.memory.gate import apply_gate
-from dkmem.memory.judge import MERGE_JUDGE_INFORMED_V1, MERGE_JUDGE_V1, JudgeResult, judge_pairs
+from dkmem.memory.judge import JUDGE_PROMPTS, MERGE_JUDGE_INFORMED_V1, MERGE_JUDGE_V1, JudgeResult, judge_pairs
 from dkmem.memory.lexicon import Lexicon
 from dkmem.memory.native_extract import (
     NATIVE_B_V1,
@@ -287,6 +287,15 @@ def build_run_config(
 
 
 def _check_judge_prompt(cfg, judge_prompt: PromptTemplate) -> None:
+    # A judge prompt that reuses a registered id with different content is refused: every record, strategy name and manifest is keyed
+    # by the id, so a look-alike would be reported as the frozen judge (the first Tier-2 full run was invalidated exactly this way:
+    # an external module defined its own ``merge_judge_v1`` with other text and another answer vocabulary).
+    registered = JUDGE_PROMPTS.get(judge_prompt.prompt_id)
+    if registered is not None and registered.sha256 != judge_prompt.sha256:
+        raise ValueError(
+            f"judge prompt {judge_prompt.prompt_id!r} has sha256 {judge_prompt.sha256[:12]}..., but the registered prompt with that id "
+            f"is {registered.sha256[:12]}...: use a new prompt id instead of redefining a frozen one"
+        )
     if cfg.merge_mechanism != "llm_judge" and judge_prompt.prompt_id != MERGE_JUDGE_V1.prompt_id:
         raise ValueError(f"Config {cfg.config_id} has no merge judge; judge_prompt does not apply")
 

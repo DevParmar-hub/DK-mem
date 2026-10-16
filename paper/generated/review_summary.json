@@ -1,0 +1,30 @@
+{
+ "gu_bank_review.csv": {
+  "Unreviewed": 30,
+  "rows": 30
+ },
+ "gu_lexicon_review.csv": {
+  "Unreviewed": 9,
+  "rows": 9
+ },
+ "gu_pairs_review.csv": {
+  "Unreviewed": 22,
+  "rows": 22
+ },
+ "hi_pairs_review.csv": {
+  "Unreviewed": 63,
+  "rows": 63
+ },
+ "mr_bank_review.csv": {
+  "Unreviewed": 30,
+  "rows": 30
+ },
+ "mr_lexicon_review.csv": {
+  "Unreviewed": 9,
+  "rows": 9
+ },
+ "mr_pairs_review.csv": {
+  "Unreviewed": 23,
+  "rows": 23
+ }
+}
