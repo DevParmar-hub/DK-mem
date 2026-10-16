@@ -23,6 +23,34 @@ Each person **owns** files. You only edit files you own; that is what makes the 
 Each section file starts with a comment listing its **sources in the repo**, the **facts it must state**, and the **claims it must not make**.
 Start there.
 
+## 1b. Implementation work (code), assigned
+
+**Already done (by the assistant, verified):** vendored evaluator files restored to their pinned bytes; Tier-1 configs A–D scored with the
+pre-registered key-holder commands (`results/full_ad_3b_s0_20261010_scored/`, pinned by sha256) and turned into paper numbers by
+`paper/tools/make_tier1_numbers.py` (`paper/generated/tier1_*`). No inference was run.
+
+**For tomorrow** (no GPU, no outside people; each owner adds tests for any code they write and runs the merge gate):
+
+| Task | Owner | What exactly | Done when |
+|---|---|---|---|
+| I1. Config D cosine figure | P1 | From the stored Tier-2 runs: histogram of bge-m3 cosine for gold-different vs gold-same injected pairs, both arms; script `paper/tools/make_figures.py` writing `paper/figures/d_cosine.pdf`. Shows data only, selects **no** threshold | Figure builds from a script; numbers in the caption come from a generated macro |
+| I2. Pipeline figure | P3 | `paper/figures/pipeline.pdf` (draw.io/TikZ; source file committed next to it) | Referenced in `method.tex` |
+| I3. Hindi review → exclusions | P2 (data) + P1 (run) | P2 fills `hi_pairs_review.csv`; P1 runs `summarize_reviews.py` and `make_numbers.py --exclude …` | Sensitivity numbers exist; primary numbers unchanged |
+| I4. Marathi fixes from review | P3 | For every `wrong` / `ambiguous` / `awkward` row: write the proposed correction in the CSV `comment` column (text only). P1 turns accepted corrections into a v2.2 patch table later; **do not edit `data/` directly** | Every flagged row has a correction or "exclude" |
+| I5. Gujarati fixes from review | P4 | Same as I4 for Gujarati | Same |
+
+**After the deadline (full paper):**
+
+| Task | Owner | Needs first |
+|---|---|---|
+| L1. v2.2 benchmark package from I4/I5 (new repair patch table, rebuild, validate) | P1 | I4, I5 |
+| L2. Versioned lexicon v2: reviewed Marathi/Gujarati entries; decide the Hindi `apne aap` rule; new hash, v1 untouched; update `tests/test_lexicon.py` | P2 (hi), P3 (mr), P4 (gu) | Native review of the lexicon sheets |
+| L3. Configs A and B in the Tier-2 runner (`run_tier2.py` supports only C and D) | P1 | — |
+| L4. Freeze v2 (`FROZEN_v2.0.json`) + register a v2 kernel arm in `validation/tier2_entity/build_kernels.py`, then run C/D (and A/B) on Kaggle | P1 | L1, L2, an independent test set |
+| L5. Marathi/Gujarati judge validation: native-authored cases, frozen, then one Kaggle run | P3 (mr), P4 (gu) | Cases written by someone who has not seen the benchmark |
+| L6. Independent held-out test set (handoff package: `eval/tier2/handoff_independent_test_v1/`) | All, with outside authors | Written approval of roles and class mix |
+| L7. Absolute hash pins in `dkmem/eval/fairness.py` and Tier-1 `eval/evaluator/validate.py` (vendored: needs a re-vendoring decision) | P1 | Decision on the authoritative hash |
+
 ## 2. Native review (P2, P3, P4): how
 
 Open your CSV in Excel/Google Sheets (UTF-8). Fill **only** the empty columns:
@@ -107,12 +135,15 @@ Either upload `paper/` to **Overleaf** (Menu → Compiler → **XeLaTeX**, neede
 
 ## 7. Claims: allowed and not allowed
 
-**Allowed:** the failure mode in our constructed benchmark; on the Hindi pairs the gate cut Config C's false merges from 9/36 to 1/36 at the
-cost of 0/27 → 5/27 missed merges (single seed, development data); D at τ=0.90 never merged a gold-same pair; the verification methodology
-and the prompt-identity failure case; the benchmark release with in-team native review.
+**Allowed:** the failure mode in our constructed benchmark; Tier 2 on the Hindi pairs: the gate cut Config C's false merges from 9/36 to
+1/36 at the cost of 0/27 → 5/27 missed merges; D at τ=0.90 never merged a gold-same pair. Tier 1 (isolated pairs, 3B, labels
+LLM-annotated, provisional): configs A–D with and without the gate, e.g. D at τ=0.90 false merges 24/36 → 0/36 with missed merges
+unchanged. All single seed, development data. The verification methodology and the prompt-identity failure case; the benchmark release with
+in-team native review.
 
 **Not allowed:** any Marathi/Gujarati *result* (none was run); "native-validated" or "independent" review; a held-out/blind test; any claim
-that τ=0.90 or the judge is a good or selected choice; natural-frequency claims; comparisons with Configs A/B (not run on Tier 2).
+that a τ value or the judge is a good or selected choice; natural-frequency claims; pooling Tier-1 (3B) with Tier-2 (7B) numbers; Tier-2
+claims about Configs A/B (not run on Tier 2).
 
 ## 8. If something goes wrong
 

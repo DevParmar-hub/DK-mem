@@ -60,6 +60,13 @@ def main() -> int:
         notes.append("paper numbers: checked against the verified report")
     else:
         notes.append("paper numbers: report absent locally, not checked (the lead checks this)")
+    if (REPO / "results" / "full_ad_3b_s0_20261010_scored" / "score.json").exists():
+        r = subprocess.run([sys.executable, str(REPO / "paper" / "tools" / "make_tier1_numbers.py"), "--check"], capture_output=True, text=True)
+        if r.returncode != 0:
+            problems.append("paper/generated tier1 files are STALE: run python paper/tools/make_tier1_numbers.py (" + r.stdout.strip() + r.stderr.strip()[-200:] + ")")
+        notes.append("Tier-1 paper numbers: checked against the pinned key-holder scoring")
+    else:
+        notes.append("Tier-1 paper numbers: scored files absent locally, not checked (the key holder checks this)")
     for p in sorted((REPO / "paper" / "generated").glob("*.tex")):
         if not p.read_text(encoding="utf-8").startswith("% GENERATED"):
             problems.append(f"HAND-EDITED GENERATED FILE: {p.relative_to(REPO)}")

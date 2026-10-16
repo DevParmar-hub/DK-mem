@@ -68,6 +68,33 @@ class TestNumbersFromTheStoredReport(unittest.TestCase):
             NUM.main(["--report", str(bad), "--check"])
 
 
+T1 = load("paper/tools/make_tier1_numbers.py", "make_tier1_numbers")
+
+
+@unittest.skipUnless((T1.SCORED / "score.json").exists(), "Tier-1 key-holder scoring not present (held by the key holder)")
+class TestTier1Numbers(unittest.TestCase):
+    def setUp(self):
+        self.n = T1.build(json.loads((T1.SCORED / "score.json").read_bytes()), json.loads((T1.SCORED / "ablation.json").read_bytes()))
+
+    def test_six_groups_three_modes_and_the_same_63_source_pairs_as_tier2(self):
+        self.assertEqual(sorted(self.n["groups"]), ["A", "B", "C", "DEighty", "DEightyFive", "DNinety"])
+        for g in self.n["groups"].values():
+            self.assertEqual(sorted(g["modes"]), ["lexicon", "lexicon+llm", "off"])
+            for e in g["modes"].values():
+                self.assertEqual((e["in_scope_hindi"]["FCR"]["n"], e["in_scope_hindi"]["MCR"]["n"]), (36, 27))
+                self.assertEqual((e["all"]["FCR"]["n"], e["all"]["MCR"]["n"]), (98, 75))
+
+    def test_the_gate_never_increases_false_merges(self):
+        for g in self.n["groups"].values():
+            off, on = g["modes"]["off"], g["modes"]["lexicon"]
+            for view in ("in_scope_hindi", "all"):
+                self.assertLessEqual(on[view]["FCR"]["k"], off[view]["FCR"]["k"])     # veto-only: a gate can only remove merges
+                self.assertGreaterEqual(on[view]["MCR"]["k"], off[view]["MCR"]["k"])
+
+    def test_committed_tier1_files_are_current(self):
+        self.assertEqual(T1.main(["--check"]), 0)
+
+
 class TestReviewSummary(unittest.TestCase):
     def test_every_row_is_counted_and_only_wrong_or_ambiguous_hindi_pairs_are_excluded(self):
         tmp = Path(tempfile.mkdtemp())

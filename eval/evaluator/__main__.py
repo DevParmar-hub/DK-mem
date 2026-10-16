@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .validate import DEFAULT_SCHEMA_DIR, check_seed_group, validate_gold_file, validate_run
 
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Validate Tier 1 run(s) against the Team B answer key (no metrics).")
     ap.add_argument("--gold", required=True, type=Path)

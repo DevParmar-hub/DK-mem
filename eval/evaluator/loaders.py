@@ -12,6 +12,7 @@ class JsonlResult:
     # (1-based line number, error text) for lines that are not a JSON object
     malformed: list[tuple[int, str]] = field(default_factory=list)
 
+
 def load_jsonl(path: str | Path) -> JsonlResult:
     """Load a UTF-8 JSONL file. Bad lines are collected, never raised."""
     out = JsonlResult()
@@ -30,6 +31,7 @@ def load_jsonl(path: str | Path) -> JsonlResult:
             out.records.append(obj)
     return out
 
+
 def load_gold(path: str | Path) -> JsonlResult:
     return load_jsonl(path)
 
@@ -46,7 +48,9 @@ def load_manifest(path: str | Path) -> dict:
         raise ValueError("run_manifest.json must contain a JSON object")
     return obj
 
+
 RAW_COSINE_RANGE = [-1.0, 1.0]
+
 
 def relax_pairwise_schema(schema: dict, manifest: dict | None) -> dict:
     """ipdV2's pairwise schema bounds similarity_score and threshold to [0, 1]. A run whose manifest declares

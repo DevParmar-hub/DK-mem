@@ -5,7 +5,27 @@
 \label{sec:results}
 
 All results are from one seed with greedy decoding, on development data, with 95\% Wilson intervals; paired contrasts use a percentile
-bootstrap over pairs and the exact McNemar test.
+bootstrap over pairs and the exact McNemar test. We report two settings on the \emph{same} 63 in-scope Hindi source pairs (36
+gold-different, 27 gold-same): Tier~1 compares each pair in isolation with a 3B backbone (all four configurations), and Tier~2 injects the
+pair into a six-session conversation with distractors and a 7B judge (Configs C and D).
+
+\subsection{Tier 1: isolated pairs, Configurations A--D}
+
+\begin{table}[t]\centering\small
+\resizebox{\linewidth}{!}{\input{generated/tier1_table.tex}}
+\caption{Tier~1 (Qwen2.5-3B, seed 0; labels LLM-annotated, provisional). ``In-scope hi'': kinship, honorific register and name-variant
+pairs in Hindi, the source pairs of Tier~2. ``All'': all 173 pairs (Hindi, Korean, Turkish, German), including classes the lexicon does
+not cover. The LLM fallback equals the plain gate here because the Hindi lexicon flags no class as ambiguous on these items.}
+\label{tab:tier1}
+\end{table}
+
+\paragraph{The gate removes almost all false merges of the embedding host.} For Config D at $\tau=0.90$, in-scope Hindi FCR falls from
+\TOneDNinetyOffHiFCR{} to \TOneDNinetyLexHiFCR{} with MCR unchanged (\TOneDNinetyOffHiMCR{}); at $\tau=0.85$ from \TOneDEightyFiveOffHiFCR{}
+to \TOneDEightyFiveLexHiFCR{}. For Config A, from \TOneAOffHiFCR{} to \TOneALexHiFCR{} (MCR \TOneAOffHiMCR{} $\to$ \TOneALexHiMCR{}).
+\todo{P1: C (3B judge) already makes \TOneCOffHiFCR{} false merges, so the gate only adds missed merges (\TOneCOffHiMCR{} $\to$
+\TOneCLexHiMCR{}); B is unchanged. Contrast with Tier 2's 7B judge, which over-merges.}
+
+\subsection{Tier 2: multi-session conversations, Configurations C and D}
 
 \begin{table}[t]\centering\small
 \input{generated/results_table.tex}
