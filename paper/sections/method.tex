@@ -6,23 +6,71 @@
 \section{DK-Mem}
 \label{sec:method}
 
-\paragraph{Task.} \todo{P3: a memory write compares a new entry with retrieved earlier entries; decision merge/keep\_both; gold relation same/different.}
+\paragraph{Task.} A memory write compares a new entry with earlier entries retrieved from the store. For each (new, earlier) pair, the system outputs
+a decision, \texttt{merge} or \texttt{keep\_both}, which is scored against a gold relation: the two entries refer to the same entity (\emph{same}) or to
+different entities (\emph{different}). A merge of a \emph{different} pair is a false merge; a \texttt{keep\_both} on a \emph{same} pair is a missed merge.
+The gate described below adds a third outcome, \texttt{link\_unresolved}, for pairs it cannot decide (see Table~\ref{tab:gate}).
 
-\paragraph{Distinction features and the lexicon.} \todo{P3: classes kinship and register gate; name\_variant recorded but does not gate.
-v1 lexicon: 15 Hindi entries (12 kinship, 3 register), exact-word matching after NFC + casefold; code-mixed tags resolved by one pooled tie-break.}
+\paragraph{Distinction features and the lexicon.} DK-Mem tags each entry with distinction features from a static, hand-curated lexicon. Two classes gate
+merges: \emph{kinship} (e.g.\ distinct terms for paternal and maternal relatives) and \emph{register} (the second-person pronouns \emph{tu}, \emph{tum}, \emph{aap}).
+A third class, \emph{name\_variant}, is recorded but never gates, since name variants of one entity should merge. The v1 lexicon contains 15 Hindi entries
+(12 kinship, 3 register), all exact-word entries; it has no Marathi or Gujarati entries. The matcher is deterministic and deliberately context-free: it
+splits the utterance on whitespace, strips edge punctuation, applies NFC normalisation and Unicode casefolding, and compares whole tokens with the surface forms.
+If several entries give different values for one class, a fixed tie-break (priority, earlier token, longer span, entry id) selects one; for code-mixed language
+tags the hits of all listed languages are pooled and resolved by this single tie-break. The output is one value per class for the entry.
+Because the matcher uses no sentence context, it has a known false match: the Hindi reflexive \emph{apne aap} (``by oneself'') is tagged as register \emph{aap}.
+This affects none of the frozen texts. The lexicon entries are marked pilot-reviewed in the lexicon file; we do not claim the lexicon is independently or fully validated.
 
-\paragraph{The compatibility gate.} \todo{P3: compatible / incompatible / underdetermined; incompatible outranks underdetermined;
-host-first application (apply\_gate). Give the rule as a small table.}
+\paragraph{The compatibility gate.} For two entries the gate compares only the gating classes (kinship, register) and returns one of three outcomes.
+\emph{Incompatible}: some class is marked on both sides with different values. \emph{Underdetermined}: some class is marked on exactly one side.
+\emph{Compatible}: otherwise. If both an incompatible and an underdetermined class are present, incompatible takes precedence.
+The gate is a dictionary comparison with no model or embedding call. It acts \emph{after} the host mechanism (\texttt{apply\_gate}) and can only veto: it never
+creates a merge, and a host decision that does not unify the pair (\texttt{keep\_both}) is returned unchanged, so no link is created for a pair the host would not have merged.
 
-\paragraph{Hosts (configurations).} \todo{P3: table of A--D: A English gloss + LLM judge; B native fact + judge; C verbatim + judge;
-D verbatim + bge-m3 cosine $>\tau$. This paper evaluates C and D on Tier 2. Judge for C: merge\_judge\_entity\_t2\_v2
-(merge = same specific person/thing/event regardless of facts), Qwen2.5-7B-Instruct, greedy decoding, strict JSON parser; an unparseable
-answer is never a decision. Note the documented convention: the standalone Tier-1 gate merges at $s \ge \tau$, every host uses $s > \tau$.}
+\begin{table}[t]\centering\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Compatibility & Host proposes \texttt{merge} & Host proposes \texttt{keep\_both}\\
+\midrule
+compatible & \texttt{merge} & \texttt{keep\_both}\\
+incompatible & \texttt{keep\_both} & \texttt{keep\_both}\\
+underdetermined & \texttt{link\_unresolved} & \texttt{keep\_both}\\
+\bottomrule
+\end{tabular}
+\caption{Gate as a veto on a host proposal (\texttt{apply\_gate}). The standalone Tier-1 gate differs in one respect: it derives its own proposal and links every underdetermined pair regardless of score.}
+\label{tab:gate}
+\end{table}
 
-\paragraph{Memory store.} \todo{P3: Tier-2 store: one entry per user turn, bge-m3 top-5 candidate retrieval over earlier raw entries,
-non-destructive union-find records; QA answerer sees joined record texts.}
+\paragraph{Hosts (configurations).} DK-Mem sits in front of a host merge mechanism that decides first. Figure~\ref{fig:pipeline} shows the write path. Table~\ref{tab:hosts} lists the four configurations of the
+pipeline; this paper evaluates C and D on Tier~2.
+Config~C uses the identity judge \texttt{merge\_judge\_entity\_t2\_v2}: \texttt{merge} means both entries concern the same specific person, thing or event, whatever the
+facts say. In the Tier-2 runs it uses Qwen2.5-7B-Instruct (separate from the Qwen2.5-3B QA model) with greedy decoding and a 128-token budget, and its output is parsed strictly: the response must be a single JSON object with exactly the keys
+\texttt{decision} and \texttt{reason}, with no repair or fence stripping. An unparseable answer is never turned into a decision: the pair gets a parse-error status, no
+pairwise record is written, and no merge is made. Config~D proposes a merge when the bge-m3 cosine $s$ satisfies $s>\tau$, where $\tau$ is a run-level value, not a tuned operating point.
+Config~C has no similarity cutoff; where a threshold applies, the host rule is the strict $s>\tau$, whereas the standalone Tier-1 gate merges a compatible pair at $s\ge\tau$.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Config & Stored text & Host merge decision\\
+\midrule
+A & English gloss & LLM judge\\
+B & native-language fact & LLM judge\\
+C & verbatim utterance & LLM judge\\
+D & verbatim utterance & bge-m3 cosine $>\tau$\\
+\bottomrule
+\end{tabular}
+\caption{Host configurations. Only C and D are evaluated on Tier~2.}
+\label{tab:hosts}
+\end{table}
+
+\paragraph{Memory store.} The Tier-2 store writes one entry per user turn (verbatim text; assistant turns are not stored). For each new entry, all earlier raw entries of the conversation are
+ranked by bge-m3 cosine and the top five are compared with it. Candidates depend only on raw entries, never on earlier decisions, so the compared pairs are identical across configurations.
+A merge joins the two entries' clusters into one memory record (union-find); every member's text and source turn are kept and nothing is deleted. At question time the QA model sees each retrieved record as its
+member texts joined in write order.
 
 \begin{figure}[t]\centering
-\todo{P3: pipeline figure (utterance -> lexicon -> store -> retrieval -> host -> gate -> record)}
-\caption{DK-Mem in front of a host merge mechanism.}\label{fig:pipeline}
+\includegraphics[width=\linewidth]{figures/pipeline.pdf}
+\caption{DK-Mem in front of a host merge mechanism (Tier-2 write path). The lexicon tags each entry; the host (C or D) proposes merge or keep\_both for each retrieved pair; the gate may only
+veto a proposed merge (to keep\_both or link\_unresolved) and never creates one. Only a final merge joins records, non-destructively.}\label{fig:pipeline}
 \end{figure}
