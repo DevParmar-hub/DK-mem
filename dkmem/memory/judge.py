@@ -32,6 +32,7 @@ __all__ = [
     "MERGE_JUDGE_V1",
     "MERGE_JUDGE_INFORMED_V1",
     "JUDGE_PROMPTS",
+    "check_prompt_content",
     "JudgeResult",
     "parse_judge_output",
     "render_judge_prompt",
@@ -95,6 +96,20 @@ MERGE_JUDGE_INFORMED_V1 = PromptTemplate(
 JUDGE_PROMPTS = {p.prompt_id: p for p in (MERGE_JUDGE_V1, MERGE_JUDGE_INFORMED_V1)}
 
 
+def check_prompt_content(prompt: PromptTemplate) -> None:
+    """Refuse a prompt that carries a registered judge id with different content.
+
+    Records, strategy names and manifests are keyed by ``prompt_id``, so a look-alike would be reported as the frozen judge (the first
+    Tier-2 full run was invalidated exactly this way). Unknown ids are allowed (write a new id instead of redefining a frozen one).
+    """
+    registered = JUDGE_PROMPTS.get(prompt.prompt_id)
+    if registered is not None and registered.sha256 != prompt.sha256:
+        raise ValueError(
+            f"judge prompt {prompt.prompt_id!r} has sha256 {prompt.sha256[:12]}..., but the registered prompt with that id "
+            f"is {registered.sha256[:12]}...: use a new prompt id instead of redefining a frozen one"
+        )
+
+
 @dataclass(frozen=True)
 class JudgeResult:
     """One judgement. Exactly one of ``decision`` and ``error`` is set."""
@@ -113,6 +128,7 @@ def render_judge_prompt(
     text_a: str, text_b: str, prompt: PromptTemplate = MERGE_JUDGE_V1
 ) -> list[dict[str, str]]:
     """Chat messages asking the judge about the stored texts of entries A and B."""
+    check_prompt_content(prompt)
     return prompt.render(f"Memory A: {text_a}\nMemory B: {text_b}")
 
 

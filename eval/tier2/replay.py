@@ -2,7 +2,9 @@
 
 Why a replay is exact. run_tier2 ranks candidates over RAW earlier entries only (memory_store.PersistentStore.rank), so the compared
 pairs, their order and their bge-m3 cosines (tier2_retrieval_log.jsonl) do not depend on any merge decision. The host proposal is
-  C: the judge's proposal for that record (judge_log.jsonl; a parse error made no record)
+  A, B, C: the judge's proposal for that record (judge_log.jsonl; a parse error made no record). A and B store the extraction (gloss / fact), so a
+     turn whose extraction failed has NO entry (its retrieval-log row is ``extraction_failed``) and each entry carries its logged stored text and
+     each comparison its logged ``record_similarity``
   D: "merge" iff cosine > tau (harness.hosts.EmbeddingThresholdHost.propose)
 and with the gate on, dkmem.memory.gate.apply_gate on the lexicon distinctions of the two verbatim entries
 (harness.extractors.extract_verbatim with the lexicon), exactly as run_tier2.run_conversation does. Merges join records with the
@@ -29,6 +31,7 @@ from harness.extractors import extract_verbatim
 from .memory_store import PersistentStore, StoredEntry
 
 MERGING = ("merge", "supersede")
+JUDGE_HOSTS = ("A", "B", "C")        # configs whose host is an LLM judge
 
 
 def _jl(p: Path) -> list[dict]:
@@ -70,10 +73,13 @@ class Distinctions:
 
 
 def compared_pairs(rlog: list[dict]):
-    """(conversation_id, later turn row, [(candidate entry id, cosine, logged status, record id)]) in processing order."""
+    """(conversation_id, later turn row, [(candidate entry id, similarity, logged status, record id)]) in processing order.
+
+    ``similarity`` is the ranking cosine of the two surfaces, except for configs A and B whose comparisons log ``record_similarity``, the cosine
+    of the two STORED texts (what the pairwise record carries). Rows of turns whose extraction failed have no comparisons."""
     for x in rlog:
         sim = {c["entry_id"]: c["similarity"] for c in x["ranked"]}
-        comps = [(c["candidate_entry_id"], sim[c["candidate_entry_id"]], c["status"], c["record_id"]) for c in x["comparisons"]]
+        comps = [(c["candidate_entry_id"], c.get("record_similarity", sim[c["candidate_entry_id"]]), c["status"], c["record_id"]) for c in x["comparisons"]]
         yield x, comps
 
 
@@ -81,8 +87,8 @@ def replay_run(rlog: list[dict], turns: dict, *, host: str, mode: str, distincti
                judge_proposals: dict | None = None, features=None) -> dict:
     """Records and final store of one run, recomputed from its retrieval log (and judge proposals for C). ``features``: the gate's
     cannot-link classes (None = the frozen default, kinship + register; dkmem.eval.sensitivity.FEATURE_SETS names the variants)."""
-    if host == "C" and judge_proposals is None:
-        raise ValueError("a C replay needs the judge proposals")
+    if host in JUDGE_HOSTS and judge_proposals is None:
+        raise ValueError(f"a {host} replay needs the judge proposals")
     if host == "D" and tau is None:
         raise ValueError("a D replay needs tau")
     if (mode == "lexicon") != (distinctions is not None):
@@ -91,11 +97,13 @@ def replay_run(rlog: list[dict], turns: dict, *, host: str, mode: str, distincti
     for x, comps in compared_pairs(rlog):
         cid = turns[x["turn_id"]]["conversation_id"]
         store = stores.setdefault(cid, PersistentStore(cid))
+        if x.get("status") == "extraction_failed":      # A/B: no entry was written for this turn
+            continue
         t = turns[x["turn_id"]]
         store.add(StoredEntry(entry_id=x["entry_id"], turn_id=x["turn_id"], session_index=x["session_index"], surface=t["text"],
-                              language=t["language"], extraction=None, entry_dict={}))
+                              language=t["language"], extraction=None, entry_dict={}, text=x.get("stored_text")))
         for cand, sim, status, rid in comps:
-            if host == "C":
+            if host in JUDGE_HOSTS:
                 proposal = judge_proposals.get(rid)
                 if proposal is None:                     # judge parse error: no record, no merge (as the runner)
                     continue
@@ -132,7 +140,7 @@ def verify(runs_dir: Path, data_dir: Path, lexicon_path: Path | None = None) -> 
         host, mode = run_kind(man)
         side = lambda s: rd.parent / f"{rd.name}.{s}"
         rlog = _jl(side("tier2_retrieval_log.jsonl"))
-        props = {j["record_id"]: j["proposal"] for j in _jl(side("judge_log.jsonl"))} if host == "C" else None
+        props = {j["record_id"]: j["proposal"] for j in _jl(side("judge_log.jsonl"))} if host in JUDGE_HOSTS else None
         rep = replay_run(rlog, turns, host=host, mode=mode, distinctions=Distinctions(lex, turns) if mode == "lexicon" else None,
                          tau=man.get("tau"), judge_proposals=props)
         written = _jl(rd / "pairwise_eval.jsonl")

@@ -181,7 +181,48 @@
       "rate": 0.8198198198198198
      },
      "retrieval_misses": [],
-     "run_id": "t2cd7b-full-v10-dk-mem-lexicon-C_seed0"
+     "run_id": "t2cd7b-full-v10-dk-mem-lexicon-C_seed0",
+     "sensitivity_excluding_review_flags": {
+      "all": {
+       "FCR": {
+        "ci95": [
+         0.08315916646398075,
+         0.3060400274464885
+        ],
+        "k": 7,
+        "n": 42
+       },
+       "MCR": {
+        "ci95": [
+         0.06150033723578355,
+         0.3353119932821348
+        ],
+        "k": 4,
+        "n": 26
+       }
+      },
+      "excluded": [
+       "t2p_0040"
+      ],
+      "hindi": {
+       "FCR": {
+        "ci95": [
+         0.004920407139810443,
+         0.14169718653273855
+        ],
+        "k": 1,
+        "n": 36
+       },
+       "MCR": {
+        "ci95": [
+         0.06150033723578355,
+         0.3353119932821348
+        ],
+        "k": 4,
+        "n": 26
+       }
+      }
+     }
     },
     "Coff": {
      "all": {
@@ -238,7 +279,48 @@
       "rate": 0.8108108108108109
      },
      "retrieval_misses": [],
-     "run_id": "t2cd7b-full-v10-store-surface-only-C_seed0"
+     "run_id": "t2cd7b-full-v10-store-surface-only-C_seed0",
+     "sensitivity_excluding_review_flags": {
+      "all": {
+       "FCR": {
+        "ci95": [
+         0.22989188315618772,
+         0.5083363428054419
+        ],
+        "k": 15,
+        "n": 42
+       },
+       "MCR": {
+        "ci95": [
+         0.0,
+         0.1287289218592153
+        ],
+        "k": 0,
+        "n": 26
+       }
+      },
+      "excluded": [
+       "t2p_0040"
+      ],
+      "hindi": {
+       "FCR": {
+        "ci95": [
+         0.13750477662994837,
+         0.4107045376672835
+        ],
+        "k": 9,
+        "n": 36
+       },
+       "MCR": {
+        "ci95": [
+         0.0,
+         0.1287289218592153
+        ],
+        "k": 0,
+        "n": 26
+       }
+      }
+     }
     },
     "Dlex": {
      "all": {
@@ -302,7 +384,48 @@
       "rate": 0.8198198198198198
      },
      "retrieval_misses": [],
-     "run_id": "t2cd7b-full-v10-dk-mem-lexicon-D_seed0"
+     "run_id": "t2cd7b-full-v10-dk-mem-lexicon-D_seed0",
+     "sensitivity_excluding_review_flags": {
+      "all": {
+       "FCR": {
+        "ci95": [
+         0.05193803327758237,
+         0.25000390262009675
+        ],
+        "k": 5,
+        "n": 42
+       },
+       "MCR": {
+        "ci95": [
+         0.8712710781407846,
+         1.0
+        ],
+        "k": 26,
+        "n": 26
+       }
+      },
+      "excluded": [
+       "t2p_0040"
+      ],
+      "hindi": {
+       "FCR": {
+        "ci95": [
+         0.0,
+         0.09641862859446367
+        ],
+        "k": 0,
+        "n": 36
+       },
+       "MCR": {
+        "ci95": [
+         0.8712710781407846,
+         1.0
+        ],
+        "k": 26,
+        "n": 26
+       }
+      }
+     }
     },
     "Doff": {
      "all": {
@@ -359,7 +482,48 @@
       "rate": 0.8198198198198198
      },
      "retrieval_misses": [],
-     "run_id": "t2cd7b-full-v10-embedding-threshold-D_seed0"
+     "run_id": "t2cd7b-full-v10-embedding-threshold-D_seed0",
+     "sensitivity_excluding_review_flags": {
+      "all": {
+       "FCR": {
+        "ci95": [
+         0.05193803327758237,
+         0.25000390262009675
+        ],
+        "k": 5,
+        "n": 42
+       },
+       "MCR": {
+        "ci95": [
+         0.8712710781407846,
+         1.0
+        ],
+        "k": 26,
+        "n": 26
+       }
+      },
+      "excluded": [
+       "t2p_0040"
+      ],
+      "hindi": {
+       "FCR": {
+        "ci95": [
+         0.0,
+         0.09641862859446367
+        ],
+        "k": 0,
+        "n": 36
+       },
+       "MCR": {
+        "ci95": [
+         0.8712710781407846,
+         1.0
+        ],
+        "k": 26,
+        "n": 26
+       }
+      }
+     }
     }
    }
   },
@@ -536,7 +700,46 @@
      "mode": "lexicon",
      "qa": null,
      "retrieval_misses": [],
-     "run_id": "t2cd7b-full-mirror-dk-mem-lexicon-C_seed0"
+     "run_id": "t2cd7b-full-mirror-dk-mem-lexicon-C_seed0",
+     "sensitivity_excluding_review_flags": {
+      "all": {
+       "FCR": {
+        "ci95": [
+         0.11705799876003031,
+         0.35939845316322905
+        ],
+        "k": 9,
+        "n": 42
+       },
+       "MCR": {
+        "ci95": [
+         0.10607239452360037,
+         0.4075692886663257
+        ],
+        "k": 6,
+        "n": 27
+       }
+      },
+      "excluded": [],
+      "hindi": {
+       "FCR": {
+        "ci95": [
+         0.02874861133599338,
+         0.2182669124927263
+        ],
+        "k": 3,
+        "n": 36
+       },
+       "MCR": {
+        "ci95": [
+         0.10607239452360037,
+         0.4075692886663257
+        ],
+        "k": 6,
+        "n": 27
+       }
+      }
+     }
     },
     "Coff": {
      "all": {
@@ -585,7 +788,46 @@
      "mode": "off",
      "qa": null,
      "retrieval_misses": [],
-     "run_id": "t2cd7b-full-mirror-store-surface-only-C_seed0"
+     "run_id": "t2cd7b-full-mirror-store-surface-only-C_seed0",
+     "sensitivity_excluding_review_flags": {
+      "all": {
+       "FCR": {
+        "ci95": [
+         0.1530264028783298,
+         0.4106873070577196
+        ],
+        "k": 11,
+        "n": 42
+       },
+       "MCR": {
+        "ci95": [
+         0.006568145980785103,
+         0.18283465933575843
+        ],
+        "k": 1,
+        "n": 27
+       }
+      },
+      "excluded": [],
+      "hindi": {
+       "FCR": {
+        "ci95": [
+         0.06081815009132838,
+         0.286595303893562
+        ],
+        "k": 5,
+        "n": 36
+       },
+       "MCR": {
+        "ci95": [
+         0.006568145980785103,
+         0.18283465933575843
+        ],
+        "k": 1,
+        "n": 27
+       }
+      }
+     }
     },
     "Dlex": {
      "all": {
@@ -641,7 +883,46 @@
      "mode": "lexicon",
      "qa": null,
      "retrieval_misses": [],
-     "run_id": "t2cd7b-full-mirror-dk-mem-lexicon-D_seed0"
+     "run_id": "t2cd7b-full-mirror-dk-mem-lexicon-D_seed0",
+     "sensitivity_excluding_review_flags": {
+      "all": {
+       "FCR": {
+        "ci95": [
+         0.0,
+         0.08379879086570391
+        ],
+        "k": 0,
+        "n": 42
+       },
+       "MCR": {
+        "ci95": [
+         0.8754449702581328,
+         0.9999999999999998
+        ],
+        "k": 27,
+        "n": 27
+       }
+      },
+      "excluded": [],
+      "hindi": {
+       "FCR": {
+        "ci95": [
+         0.0,
+         0.09641862859446367
+        ],
+        "k": 0,
+        "n": 36
+       },
+       "MCR": {
+        "ci95": [
+         0.8754449702581328,
+         0.9999999999999998
+        ],
+        "k": 27,
+        "n": 27
+       }
+      }
+     }
     },
     "Doff": {
      "all": {
@@ -690,7 +971,46 @@
      "mode": "off",
      "qa": null,
      "retrieval_misses": [],
-     "run_id": "t2cd7b-full-mirror-embedding-threshold-D_seed0"
+     "run_id": "t2cd7b-full-mirror-embedding-threshold-D_seed0",
+     "sensitivity_excluding_review_flags": {
+      "all": {
+       "FCR": {
+        "ci95": [
+         0.0,
+         0.08379879086570391
+        ],
+        "k": 0,
+        "n": 42
+       },
+       "MCR": {
+        "ci95": [
+         0.8754449702581328,
+         0.9999999999999998
+        ],
+        "k": 27,
+        "n": 27
+       }
+      },
+      "excluded": [],
+      "hindi": {
+       "FCR": {
+        "ci95": [
+         0.0,
+         0.09641862859446367
+        ],
+        "k": 0,
+        "n": 36
+       },
+       "MCR": {
+        "ci95": [
+         0.8754449702581328,
+         0.9999999999999998
+        ],
+        "k": 27,
+        "n": 27
+       }
+      }
+     }
     }
    }
   }

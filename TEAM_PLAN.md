@@ -33,7 +33,7 @@ pre-registered key-holder commands (`results/full_ad_3b_s0_20261010_scored/`, pi
 
 | Task | Owner | What exactly | Done when |
 |---|---|---|---|
-| I1. Config D cosine figure | P1 | From the stored Tier-2 runs: histogram of bge-m3 cosine for gold-different vs gold-same injected pairs, both arms; script `paper/tools/make_figures.py` writing `paper/figures/d_cosine.pdf`. Shows data only, selects **no** threshold | Figure builds from a script; numbers in the caption come from a generated macro |
+| I1. Config D cosine figure | P1 | **DONE by the assistant**: `paper/tools/make_figures.py` → `paper/figures/d_cosine.pdf`, numbers in `paper/generated/figure_numbers.tex`, already included in `results.tex`. Shows data only, selects **no** threshold. P1 only has to re-run it if the report changes | Already built; keep `python tools/check_integrity.py` green |
 | I2. Pipeline figure | P3 | `paper/figures/pipeline.pdf` (draw.io/TikZ; source file committed next to it) | Referenced in `method.tex` |
 | I3. Hindi review → exclusions | P2 (data) + P1 (run) | P2 fills `hi_pairs_review.csv`; P1 runs `summarize_reviews.py` and `make_numbers.py --exclude …` | Sensitivity numbers exist; primary numbers unchanged |
 | I4. Marathi fixes from review | P3 | For every `wrong` / `ambiguous` / `awkward` row: write the proposed correction in the CSV `comment` column (text only). P1 turns accepted corrections into a v2.2 patch table later; **do not edit `data/` directly** | Every flagged row has a correction or "exclude" |
@@ -45,8 +45,8 @@ pre-registered key-holder commands (`results/full_ad_3b_s0_20261010_scored/`, pi
 |---|---|---|
 | L1. v2.2 benchmark package from I4/I5 (new repair patch table, rebuild, validate) | P1 | I4, I5 |
 | L2. Versioned lexicon v2: reviewed Marathi/Gujarati entries; decide the Hindi `apne aap` rule; new hash, v1 untouched; update `tests/test_lexicon.py` | P2 (hi), P3 (mr), P4 (gu) | Native review of the lexicon sheets |
-| L3. Configs A and B in the Tier-2 runner (`run_tier2.py` supports only C and D) | P1 | — |
-| L4. Freeze v2 (`FROZEN_v2.0.json`) + register a v2 kernel arm in `validation/tier2_entity/build_kernels.py`, then run C/D (and A/B) on Kaggle | P1 | L1, L2, an independent test set |
+| L3. Configs A and B in the Tier-2 runner (`run_tier2.py` supports only C and D) | P1 | **Design decision first:** the pinned `contract.py` rejects non-verbatim entries (`entry_not_verbatim`), so A/B records would fail it; this needs an unpinned contract variant plus scorer changes, then Kaggle validation |
+| L4. Freeze v2 (`FROZEN_v2.0.json`) + register a v2 kernel arm in `validation/tier2_entity/build_kernels.py`, then run C/D (and A/B) on Kaggle | P1 | L1, L2, an independent test set, **and a decided freeze schema**: the runner (`run_tier2.verify_frozen`), the smoke selector (needs 2 Hindi + 1 German conversation; v2 has no German) and the payload checks are all written against the v1 freeze layout |
 | L5. Marathi/Gujarati judge validation: native-authored cases, frozen, then one Kaggle run | P3 (mr), P4 (gu) | Cases written by someone who has not seen the benchmark |
 | L6. Independent held-out test set (handoff package: `eval/tier2/handoff_independent_test_v1/`) | All, with outside authors | Written approval of roles and class mix |
 | L7. Absolute hash pins in `dkmem/eval/fairness.py` and Tier-1 `eval/evaluator/validate.py` (vendored: needs a re-vendoring decision) | P1 | Decision on the authoritative hash |
@@ -106,7 +106,7 @@ For each PR: `python tools/check_integrity.py` passes, `python -m pytest tests e
 files, then **merge (no squash, so nothing is lost)**. After the review CSVs are merged:
 ```bash
 python paper/tools/summarize_reviews.py                                   # review counts + paper/review/exclusions.txt
-python paper/tools/make_numbers.py --exclude paper/review/exclusions.txt  # adds the sensitivity numbers; primary numbers unchanged
+python paper/tools/make_numbers.py   # reads paper/review/exclusions.txt by default: adds the sensitivity numbers; primary numbers unchanged
 ```
 then commit `paper/generated/` and `paper/review/exclusions.txt`.
 
@@ -150,3 +150,29 @@ claims about Configs A/B (not run on Tier 2).
 * `check_integrity.py` says a frozen/pinned/vendored file changed: **do not commit**; restore that file from `main` and tell P1.
 * A number in the PDF looks wrong: fix it in `paper/tools/make_numbers.py` (P1), never in the `.tex`.
 * A reviewer finds a wrong Hindi label: it goes to `exclusions.txt` and the sensitivity table; the primary table is not edited.
+
+## Status addendum: v2 kernel arm and Configs A/B (implementation complete; fakes/synthetic tests only, no GPU run)
+
+Done: Configs A and B run, validate (`eval/tier2/contract_v2.py`, `extraction_verify.py`) and score (`replay.py`, `score_v2.py`) on Tier 2; `eval/tier2/freeze_v2.py`
+(assemble / verify / freeze); `build_kernels.py tier2 --arm v2 [--arm-root eval/tier2/v2] [--configs full|CONFIG:MODE,...] [--smoke]` with a v2 acceptance cell.
+
+Remaining, in order (nothing else is code):
+1. Native-reviewed lexicon v2 (final), plus final specs and the independent test set.
+2. `python -m tier2.freeze_v2 assemble ... --out eval/tier2/v2`, then `freeze --arm-root eval/tier2/v2 --confirm-freeze-v2` (lead only, once).
+3. Build kernels (`--smoke` first), run on Kaggle, score with `score_v2`.
+Not yet established: native validation, mr/gu judge accuracy, one-seed acceptance. `FROZEN_v2.0.json` does not exist.
+
+### Update (2026-10-17): reviews and draft lexicon v2
+
+No human review was available, so the Marathi and Gujarati sheets were reviewed by the model (Claude). Every comment says
+"Claude draft, not native-verified". In the paper this is **model review**: not native, not in-team.
+* `paper/review/gu_*.csv` filled (61 rows; text/labels/ids unchanged). Findings: kinship gold-same pairs 0149-0151 ambiguous (no
+  shared name anchor, as in Marathi 0125-0128); bank item 24 wrong ("bani" -> "banyu"); 5/9 lexicon entries unsure.
+* `exclusions.txt` = `t2p_0040` (the Hindi in-team review's one ambiguous pair); `make_numbers.py` now reads it by default.
+* Draft lexicon v2: `dkmem/memory/distinction_features_v2.json`, built by `tools/build_lexicon_v2.py` (checked by `check_integrity.py`):
+  v1's 15 Hindi entries unchanged + the 18 proposed mr/gu entries with their review in the notes. v1 is untouched. Still held: Gujarati and
+  Marathi naani (homograph), so `t2s_v2_0142` and the Marathi periphrasis `t2s_v2_0119` are untagged on a side.
+* Benchmark text stays as is (native-script pairs kept: they are the cross-script test). Any romanised-only variant would be a new v2.2.
+
+Still open (not doable by the model): the independent test set (outside authors), the freeze (lead's decision; with this lexicon it
+would freeze model-reviewed labels), GPU runs, and mr/gu judge validation.

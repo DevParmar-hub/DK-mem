@@ -4,7 +4,8 @@
         --evaluator <kernel>.evaluator --data-dir <label data dir> [--lexicon <file>] [--languages hi] [--classes kinship,...]
         [--exclude-pairs ids.txt] [--boot 10000] --label PROVISIONAL|FINAL --out <new file>
 
-Per run: (1) provenance: tier2.contract.validate_run against the ORIGINAL arm (exact passthrough, QA-id map, frozen file); a failing run
+Per run: (1) provenance: tier2.contract_v2.validate_run (all four configs) + judge-log verification against the ORIGINAL arm (exact
+passthrough, QA-id map, frozen file, and the arm's pinned lexicon when it has one); a failing run
 is excluded and reported; (2) outcomes: tier2.replay with the given lexicon (C: the logged judge proposals; D: the run's tau), so a new
 lexicon needs no inference; (3) metrics with the labels of --data-dir, whose conversations file must equal the runs' (else: rerun).
 
@@ -34,7 +35,7 @@ from . import contract, judge_provenance
 
 from . import qa_norm as Q
 from .entity_report import cluster_ratio, paired, wilson
-from .replay import Distinctions, _jl, check_same_conversations, compared_pairs, load_turns, replay_run
+from .replay import JUDGE_HOSTS, Distinctions, _jl, check_same_conversations, compared_pairs, load_turns, replay_run
 
 EVAL = Path(__file__).resolve().parents[1]
 FREEZE_V2 = EVAL / "EVALUATION_PLAN_FREEZE_v2.json"
@@ -79,9 +80,14 @@ def outcomes(pairs: list[dict], rlog: list[dict], replayed: dict) -> list[dict]:
     rec = {r["record_id"]: r for r in replayed["records"]}
     member = {e: m["memory_id"] for m in replayed["store"] for e in m["member_entry_ids"]}
     by_turn = {x["turn_id"]: x for x in rlog}
+    no_entry = {x["turn_id"] for x in rlog if x.get("status") == "extraction_failed"}      # configs A and B: the extraction failed, nothing was stored
     out = []
     for p in pairs:
         ea, eb = p["earlier"] + "_e0", p["later"] + "_e0"
+        if p["earlier"] in no_entry or p["later"] in no_entry:
+            # no entry on a side: the pair cannot be merged. It stays in the denominators as NOT merged (as retrieval misses and judge parse errors do)
+            out.append({**p, "direct_status": "no_entry", "direct_merged": False, "record_merged": False})
+            continue
         r = rec.get(f"{ea}::{eb}")
         if r is not None:
             status = "merged" if r["decision"] in MERGING else "not_merged"
@@ -119,8 +125,11 @@ def score_run(rd: Path, *, run_data_dir: Path, arm_frozen: Path, evaluator: Path
     qmap = evaluator / "qa_id_map.json"
     # the contract plus the independent judge-log verification (per-row prompt identity, strict re-parse of every raw output): the
     # replay below reads the log's ``proposal`` field, so a log that does not match its manifest must exclude the run
+    # an arm that pins the gate's lexicon (v2: <arm root>/lexicon/distinction_features.json): a gated run must have recorded exactly that file
+    arm_lexicon = Path(arm_frozen).parent / "lexicon" / "distinction_features.json"
     prov = judge_provenance.validate_run_verified(rd, run_data_dir, passthrough_file=evaluator / "t2_passthrough_used.jsonl",
-                                                  qa_id_map=qmap if qmap.exists() else None, frozen_file=arm_frozen)
+                                                  qa_id_map=qmap if qmap.exists() else None, frozen_file=arm_frozen,
+                                                  lexicon_file=arm_lexicon if arm_lexicon.is_file() else None)
     res = {"run_id": rd.name, "config": host, "mode": mode, "tau": man.get("tau"), "provenance_contract_ok": prov["ok"],
            "provenance_errors": prov["errors"][:10],
            "judge_log_verification": (None if prov["judge_log_verification"] is None else
@@ -133,7 +142,7 @@ def score_run(rd: Path, *, run_data_dir: Path, arm_frozen: Path, evaluator: Path
         return res
     side = lambda s: rd.parent / f"{rd.name}.{s}"
     rlog = _jl(side("tier2_retrieval_log.jsonl"))
-    props = {j["record_id"]: j["proposal"] for j in _jl(side("judge_log.jsonl"))} if host == "C" else None
+    props = {j["record_id"]: j["proposal"] for j in _jl(side("judge_log.jsonl"))} if host in JUDGE_HOSTS else None
     rep = replay_run(rlog, turns, host=host, mode=mode, distinctions=Distinctions(lexicon, turns) if mode == "lexicon" else None,
                      tau=man.get("tau"), judge_proposals=props, features=features)
     written_store = _jl(side("tier2_store_final.jsonl"))
@@ -156,7 +165,7 @@ def score_run(rd: Path, *, run_data_dir: Path, arm_frozen: Path, evaluator: Path
     res["merge_rates"] = {k: cluster_ratio([tuple(cells[k].get(c, [0, 0])) for c in conv_ids]) for k in ("dd", "id", "ii")}
     # gate vetoes and bypasses
     if mode == "lexicon":
-        prop = (lambda r: props.get(r["record_id"]) == "merge") if host == "C" else (lambda r: r["similarity_score"] > man["tau"])
+        prop = (lambda r: props.get(r["record_id"]) == "merge") if host in JUDGE_HOSTS else (lambda r: r["similarity_score"] > man["tau"])
         member = {e: m["memory_id"] for m in rep["store"] for e in m["member_entry_ids"]}
         vetoed = [r for r in rep["records"] if prop(r) and r["decision"] not in MERGING]
         byp = [r for r in vetoed if member[r["record_id"].split("::")[0]] == member[r["record_id"].split("::")[1]]]
@@ -334,7 +343,7 @@ def score_arm(a) -> dict:
     ok = {k: v for k, v in res["runs"].items() if v["provenance_contract_ok"]}
     by = {(v["config"], v["mode"]): v for v in ok.values()}
     contrasts = {}
-    for cfg in ("C", "D"):
+    for cfg in ("A", "B", "C", "D"):
         off, on = by.get((cfg, "off")), by.get((cfg, "lexicon"))
         if off and on:
             for lvl in ("record", "direct"):
@@ -349,7 +358,7 @@ def score_arm(a) -> dict:
         fr = d_frontier(rlog, turns, pairs, lexicon, features)
         res["d_frontier"] = {}
         for lvl in ("record", "direct"):
-            c_points = {f"C_{v['mode']}": [o[f"{lvl}_merged"] for o in v["pairs"]] for v in ok.values() if v["config"] == "C"}
+            c_points = {f"{v['config']}_{v['mode']}": [o[f"{lvl}_merged"] for o in v["pairs"]] for v in ok.values() if v["config"] in JUDGE_HOSTS}
             res["d_frontier"][lvl] = frontier_report(fr, pairs, c_points, lvl, a.boot)
         res["d_frontier"]["n_taus"] = len(fr["taus"])
         res["d_frontier"]["note"] = "no tau is selected; tau 0.90 was the executed value only"

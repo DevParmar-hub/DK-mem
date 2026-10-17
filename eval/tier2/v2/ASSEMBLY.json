@@ -1,0 +1,73 @@
+{
+ "assembled_utc": "2026-10-17T13:43Z",
+ "validation": {
+  "ok": true,
+  "failures": null
+ },
+ "sources_sha256": {
+  "pair_specs": "d160aa24cccf73580b9293fa5863fefed57b7726affe1856f0677da1a9fce673",
+  "splits": [
+   "d79fa08cf7265632bf6ce1e70cf0d221a8856d495d1a4b525d833c9d72085b39"
+  ],
+  "distractor_banks": [
+   "4029cc43ac75c81f7352efec38f8c5cb2767d4b2c0c1884757a46fdfe88e351f"
+  ],
+  "lexicon_raw": "565c95fc973fb123326edb9772f69119127c83216ac2f7fa97527bfe21377e59",
+  "lexicon_lf": "565c95fc973fb123326edb9772f69119127c83216ac2f7fa97527bfe21377e59"
+ },
+ "bank_files": [
+  "distractors_v2_1.json"
+ ],
+ "generator_sha256": "1c042698e6dd051fd9f46112e776c5e71e029c255224a233baf24a337b16c9f7",
+ "qa_norm_sha256": "1e0df9a7c364f89f81760d67e434c239d69b1f307991eca441c5337ba77ea0e2",
+ "benchmark_manifest_counts": {
+  "conversations": 126,
+  "injected_pairs": 126,
+  "qa_questions": 194,
+  "by_relation": {
+   "different": 68,
+   "same": 58
+  },
+  "by_language": {
+   "gu": 22,
+   "hi": 81,
+   "mr": 23
+  },
+  "by_class": {
+   "contextual_qualifier": 12,
+   "honorific_register": 26,
+   "kinship": 60,
+   "name_variant": 28
+  },
+  "by_split": {
+   "dev": 126
+  },
+  "by_session_distance": {
+   "1": 42,
+   "3": 42,
+   "5": 42
+  },
+  "by_language_class_relation": {
+   "gu|contextual_qualifier|different": 2,
+   "gu|honorific_register|different": 3,
+   "gu|honorific_register|same": 3,
+   "gu|kinship|different": 6,
+   "gu|kinship|same": 4,
+   "gu|name_variant|same": 4,
+   "hi|contextual_qualifier|different": 8,
+   "hi|honorific_register|different": 6,
+   "hi|honorific_register|same": 7,
+   "hi|kinship|different": 32,
+   "hi|kinship|same": 8,
+   "hi|name_variant|same": 20,
+   "mr|contextual_qualifier|different": 2,
+   "mr|honorific_register|different": 3,
+   "mr|honorific_register|same": 4,
+   "mr|kinship|different": 6,
+   "mr|kinship|same": 4,
+   "mr|name_variant|same": 4
+  }
+ },
+ "benchmark_version": "2.0",
+ "seed": 20261015
+}

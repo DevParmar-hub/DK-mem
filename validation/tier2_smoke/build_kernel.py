@@ -65,9 +65,10 @@ manifest_of, tree_sha256 = _abcd.manifest_of, _abcd.tree_sha256
 _code, _md, _UNPACK_CELL = _abcd._code, _abcd._md, _abcd._UNPACK_CELL
 
 DKMEM_SUFFIXES = (".py", ".json", ".txt")
-DKMEM_EXCLUDED_PREFIXES = ("dkmem/data/", "dkmem/eval/")
+# the draft lexicon v2 is not shipped: a v2 run gets the gate's lexicon from its frozen arm root (lexicon/, pinned), never from dkmem/
+DKMEM_EXCLUDED_PREFIXES = ("dkmem/data/", "dkmem/eval/", "dkmem/memory/distinction_features_v2.json")
 SYSTEM_FILES = (
-    "eval/tier2/__init__.py", "eval/tier2/run_tier2.py", "eval/tier2/memory_store.py", "eval/tier2/judge_host.py",
+    "eval/tier2/__init__.py", "eval/tier2/run_tier2.py", "eval/tier2/memory_store.py", "eval/tier2/judge_host.py", "eval/tier2/entry_extraction.py",
     "eval/tier2/frozen_judge.py", "eval/tier2/judge_entity.py", "eval/tier2/FROZEN_v1.0.json",
     "eval/harness/__init__.py", "eval/harness/_dkmem.py", "eval/harness/extractors.py", "eval/harness/hosts.py",
     "eval/harness/similarity.py", "eval/harness/writer.py",
@@ -201,10 +202,14 @@ def qa_id_map(repo: str = REPO) -> dict[str, str]:
     return blind_questions(_read_lf(os.path.join(repo, QUESTIONS)))[1]
 
 
+SYSTEM_PIN_PREFIXES = ("lexicon/",)      # a v2 freeze also pins the gate's lexicon: the runner reads it, so it is NOT evaluator-only
+
+
 def protected_hashes(files: dict[str, str]) -> set[str]:
-    """sha256 of every evaluator-only frozen file, read from the payload's own FROZEN_v1.0.json (no protected file is opened)."""
+    """sha256 of every evaluator-only frozen file, read from the payload's own FROZEN json (no protected file is opened)."""
     fz = json.loads(files[FROZEN_FILE])["sha256"]
-    return {h for rel, h in fz.items() if rel not in ("data/tier2_conversations.jsonl", "data/tier2_qa_questions.jsonl")}
+    return {h for rel, h in fz.items()
+            if rel not in ("data/tier2_conversations.jsonl", "data/tier2_qa_questions.jsonl") and not rel.startswith(SYSTEM_PIN_PREFIXES)}
 
 
 def check_payload(files: dict[str, str]) -> None:
@@ -293,16 +298,20 @@ def _check_inputs(files: dict[str, str]) -> None:
         raise BuildError("passthrough ids follow the historical distractor rule: injected turns would be identifiable")
 
 
-def select_conversations(files: dict[str, str]) -> list[str]:
-    """Label-free, deterministic: the first two Hindi conversations and the first German one, in file order."""
+SMOKE_PLANS = {"v1": (("hi", 2), ("de", 1)),                  # the original benchmark: two Hindi and one German conversation
+               "v2": (("hi", 2), ("mr", 1), ("gu", 1))}       # the v2 benchmark: every language is exercised (German is out of v2)
+
+
+def select_conversations(files: dict[str, str], plan=SMOKE_PLANS["v1"]) -> list[str]:
+    """Label-free, deterministic: per ``plan`` the first ``n`` conversations of each language, in file order (default: two Hindi + one German)."""
     by_lang: dict[str, list[str]] = {}
     for c in _jsonl(files[CONVERSATIONS]):
         langs = {t["language"] for s in c["sessions"] for t in s["turns"] if t["speaker"] == "user"}
         if len(langs) == 1:
             by_lang.setdefault(next(iter(langs)), []).append(c["conversation_id"])
-    if len(by_lang.get("hi", [])) < 2 or not by_lang.get("de"):
-        raise BuildError("the conversations file has no two Hindi and one German conversation")
-    return [*by_lang["hi"][:2], by_lang["de"][0]]
+    if any(len(by_lang.get(lang, [])) < n for lang, n in plan):
+        raise BuildError("the conversations file lacks the smoke selection " + ", ".join(f"{n} {lang}" for lang, n in plan))
+    return [cid for lang, n in plan for cid in by_lang[lang][:n]]
 
 
 # --- the notebook ------------------------------------------------------------------------------------------------

@@ -750,6 +750,325 @@ class TestRunnerWithTheRealHarness(unittest.TestCase):
         self.assertIn("judge_prompt_not_recognised", codes(self.corrupt(run, lambda m: m.update(judge_prompt_sha256="0" * 64))))
 
 
+class FakeABGenerator(FakeJudgeGenerator):
+    """Answers the A extraction prompt (an English gloss), the B extraction prompt ({"fact"}), the judge prompt and the QA prompt.
+    A text in ``fail_texts`` gets an answer that violates both extraction contracts (not JSON)."""
+
+    def __init__(self, fail_texts=(), **kw):
+        super().__init__(**kw)
+        self.fail_texts = tuple(fail_texts)
+        self.extraction_calls = 0
+
+    def generate(self, prompts, params):
+        out = []
+        for m in prompts:
+            system, last = m[0]["content"], m[-1]["content"]
+            if "exactly one key and nothing else" in system:                            # config B: native_b_v1 (shares its opening with V4: test it first)
+                self.extraction_calls += 1
+                u = last.removeprefix("Utterance: ")
+                out.append("not json" if u in self.fail_texts else json.dumps({"fact": "fact: " + u}, ensure_ascii=False))
+            elif system.startswith("You convert one user utterance"):                 # config A: mem0_extraction_v4
+                self.extraction_calls += 1
+                u = last.removeprefix("Utterance: ")
+                out.append("not json" if u in self.fail_texts else json.dumps({"gloss": "note: " + u, "distinction": {}, "surface": u}, ensure_ascii=False))
+            else:
+                out.extend(super().generate([m], params))
+        return out
+
+
+PREFIX = {"A": "note: ", "B": "fact: "}
+
+
+def make_ab_setup(config, mode, generator, conv, *, field="gloss"):
+    import tier2.entry_extraction as ee
+    run, jh = H["run"], H["jh"]
+    metric = fake_metric()
+    host = jh.FrozenJudgeHost(generator, judge_params(), MERGE_JUDGE_V1, metric, field)
+    lexicon = real_lexicon() if mode == "lexicon" else None
+    extractor = ee.TurnExtractor(config, generator, GenerationParams(max_new_tokens=256, do_sample=False, seed=0, batch_size=8), lexicon, 0)
+    passthrough = {t["turn_id"]: "ent_" + hashlib.sha256(t["turn_id"].encode()).hexdigest()[:16] for t in user_turns(conv)}
+    qa_params = GenerationParams(max_new_tokens=run.QA_MAX_NEW_TOKENS, do_sample=False, seed=0, batch_size=8)
+    return run.Setup(config, mode, host, metric, generator, lexicon, passthrough, seed=0, qa_params=qa_params, extractor=extractor)
+
+
+class TestConfigsAAndBInTheRunner(unittest.TestCase):
+    """Configs A and B store the extraction, not the surface; a failed extraction stores nothing."""
+
+    def setUp(self):
+        self.conv = load_jsonl(CONVERSATIONS)[0]
+
+    def test_the_stored_text_is_the_extraction_and_the_judge_sees_it(self):
+        for config in ("A", "B"):
+            with self.subTest(config=config):
+                gen = FakeABGenerator()
+                setup = make_ab_setup(config, "off", gen, self.conv)
+                res = H["run"].run_conversation(self.conv, [], setup, "t2ab")
+                self.assertEqual(len(res["rows"]), 45)
+                self.assertEqual(gen.extraction_calls, 12)                                    # one batched extraction of the 12 user turns
+                for j in res["judge_rows"]:
+                    self.assertTrue(j["text_a"].startswith(PREFIX[config]) and j["text_b"].startswith(PREFIX[config]), j["text_a"])
+                surface = {t["turn_id"]: t["text"] for t in user_turns(self.conv)}
+                for r in res["rows"]:
+                    for e in (r["entry_a"], r["entry_b"]):
+                        self.assertEqual(e["surface"], surface[e["source_utterance_id"]])
+                        self.assertEqual(e["gloss"], PREFIX[config] + e["surface"])
+                self.assertTrue(all(m["text"].startswith(PREFIX[config]) for m in res["store"]))   # records show the stored text, not the surface
+                sims = {c["record_id"]: c["record_similarity"] for x in res["retrieval_log"] for c in x["comparisons"]}
+                self.assertEqual({r["record_id"]: r["similarity_score"] for r in res["rows"]}, sims)
+                self.assertTrue(all(x["stored_text"].startswith(PREFIX[config]) for x in res["retrieval_log"]))
+
+    def test_ranking_is_by_the_surfaces_for_every_config(self):
+        a = H["run"].run_conversation(self.conv, [], make_ab_setup("A", "off", FakeABGenerator(), self.conv), "t2ab")
+        c, _ = make_setup("C", "off", generator=FakeJudgeGenerator(), convs=[self.conv])
+        c = H["run"].run_conversation(self.conv, [], c, "t2c")
+        self.assertEqual([[(k["entry_id"], k["similarity"]) for k in x["ranked"]] for x in a["retrieval_log"]],
+                         [[(k["entry_id"], k["similarity"]) for k in x["ranked"]] for x in c["retrieval_log"]])
+
+    def test_a_failed_extraction_writes_no_entry_and_is_logged_not_decided(self):
+        turns = user_turns(self.conv)
+        victim = turns[2]["text"]
+        failed_ids = {f"{t['turn_id']}_e0" for t in turns if t["text"] == victim}
+        for config in ("A", "B"):
+            with self.subTest(config=config):
+                gen = FakeABGenerator(fail_texts=[victim])
+                setup = make_ab_setup(config, "off", gen, self.conv)
+                res = H["run"].run_conversation(self.conv, [], setup, "t2ab")
+                failed_rows = [x for x in res["retrieval_log"] if x.get("status") == "extraction_failed"]
+                self.assertEqual({x["turn_id"] for x in failed_rows}, {t["turn_id"] for t in turns if t["text"] == victim})
+                for x in failed_rows:
+                    self.assertEqual((x["ranked"], x["candidates"], x["comparisons"], x["entry_id"]), ([], [], [], None))
+                members = {e for m in res["store"] for e in m["member_entry_ids"]}
+                self.assertFalse(members & failed_ids)                                         # nothing stored for the failed turns
+                self.assertEqual(len(members), 12 - len(failed_ids))
+                self.assertFalse(any(r["entry_a"]["entry_id"] in failed_ids or r["entry_b"]["entry_id"] in failed_ids for r in res["rows"]))
+                xlog = setup.extractor.log
+                bad = [r for r in xlog if r["status"] == "failed"]
+                self.assertEqual(len(bad), len(failed_ids))
+                self.assertTrue(all(r["stored_text"] is None and r["raw_output"] == "not json" and r["error"] for r in bad))
+                # a later turn's store size counts only stored entries
+                last = res["retrieval_log"][-1]
+                self.assertEqual(last["store_size_before"], 11 - len(failed_ids))
+
+    def test_the_gate_uses_the_lexicon_on_the_utterance_and_off_records_no_distinction(self):
+        for config in ("A", "B"):
+            off = H["run"].run_conversation(self.conv, [], make_ab_setup(config, "off", FakeABGenerator(), self.conv), "t2off")
+            on = H["run"].run_conversation(self.conv, [], make_ab_setup(config, "lexicon", FakeABGenerator(), self.conv), "t2on")
+            self.assertTrue(all(r["compatibility"] is None and r["entry_a"]["distinction"] is None for r in off["rows"]), config)
+            self.assertTrue(all(r["compatibility"] in ("compatible", "incompatible", "underdetermined") for r in on["rows"]), config)
+
+    def test_setup_rejects_inconsistent_configurations(self):
+        run, jh = H["run"], H["jh"]
+        gen, conv = FakeABGenerator(), self.conv
+        good = make_ab_setup("A", "off", gen, conv)
+        with self.assertRaisesRegex(TypeError, "needs a TurnExtractor"):                       # A without an extractor
+            run.Setup("A", "off", good.host, good.metric, gen, None, good.passthrough, extractor=None)
+        with self.assertRaisesRegex(TypeError, "needs a TurnExtractor"):                       # an extractor of the wrong config
+            run.Setup("B", "off", good.host, good.metric, gen, None, good.passthrough, extractor=good.extractor)
+        with self.assertRaisesRegex(ValueError, "must see the stored text"):                   # A's judge must read the gloss, not the surface
+            make_ab_setup("A", "off", gen, conv, field="surface")
+        c, _ = make_setup("C", "off", generator=FakeJudgeGenerator(), convs=[conv])
+        with self.assertRaisesRegex(ValueError, "takes no extractor"):
+            run.Setup("C", "off", c.host, c.metric, gen, None, c.passthrough, extractor=good.extractor)
+        with self.assertRaisesRegex(ValueError, "exactly when the gate is on"):
+            run.Setup("A", "lexicon", good.host, good.metric, gen, real_lexicon(), good.passthrough, extractor=good.extractor)
+
+
+class TestConfigsAAndBEndToEnd(unittest.TestCase):
+    """``run_tier2.main`` over A and B (real harness, writer, contract_v2, provenance; fake generator and embedder only)."""
+
+    @classmethod
+    def setUpClass(cls):
+        import tier2.contract_v2 as cv2
+        cls.cv2 = cv2
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.root = Path(cls.tmp.name)
+        cls.syn = SyntheticTier2(cls.root)
+        cls.pt = cls.root / "passthrough.jsonl"
+        cls.pt.write_text("".join(json.dumps(r) + "\n" for r in H["contract"].build_passthrough_ids(cls.syn.dir)), encoding="utf-8", newline="\n")
+        turns0 = user_turns(load_jsonl(CONVERSATIONS)[0])
+        cls.victim = turns0[2]["text"]                                     # the injected 'a' side of conversation 0 in SyntheticTier2
+        cls.ok_out = cls.run_main("ok", FakeABGenerator())
+        cls.fail_out = cls.run_main("fail", FakeABGenerator(fail_texts=[cls.victim]))
+
+    @classmethod
+    def run_main(cls, name, gen):
+        run = H["run"]
+        out = cls.root / name
+        with mock.patch.object(run, "build_models", lambda args: (fake_metric(), gen)), \
+                mock.patch.object(run, "verify_frozen", lambda d, *_: {"version": "1.0", "verified_files": [], "not_in_payload_evaluator_only": []}):
+            rc = run.main(["--passthrough", str(cls.pt), "--data-dir", str(cls.syn.dir), "--out", str(out), "--run-prefix", "t2ab",
+                           "--configs", "A:off,A:lexicon,B:off,B:lexicon", "--conversations", ",".join(cls.syn.conv_ids)])
+        assert rc == 0, rc
+        return out
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def validate(self, out, run, **kw):
+        return self.cv2.validate_run(out / run, self.syn.dir, **kw)
+
+    def test_the_four_runs_exist_with_the_expected_names_and_files(self):
+        runs = sorted(p.name for p in self.ok_out.iterdir() if p.is_dir())
+        self.assertEqual(runs, ["t2ab-dk-mem-lexicon-A_seed0", "t2ab-dk-mem-lexicon-B_seed0", "t2ab-mem0-A_seed0", "t2ab-mem0-B_seed0"])
+        for r in runs:
+            for suffix in ("tier2_retrieval_log", "tier2_store_final", "tier2_qa_answers", "judge_log", "extraction_log"):
+                self.assertTrue((self.ok_out / f"{r}.{suffix}.jsonl").exists(), (r, suffix))
+            self.assertEqual(len(load_jsonl(self.ok_out / f"{r}.extraction_log.jsonl")), 36)           # 3 conversations x 12 user turns
+
+    def test_every_run_passes_contract_v2_and_the_independent_verifications(self):
+        for r in (p.name for p in self.ok_out.iterdir() if p.is_dir()):
+            rep = self.validate(self.ok_out, r)
+            self.assertTrue(rep["ok"], (r, rep["errors"][:3]))
+            self.assertEqual(rep["extraction"]["status"], "verified")
+            self.assertEqual(rep["counts"]["extraction_failures"], 0)
+            self.assertEqual(rep["counts"]["pairwise_records"], 3 * 45)
+            ver = H["prov"].validate_run_verified(self.ok_out / r, self.syn.dir)
+            self.assertEqual(ver["judge_log_verification"]["status"], "verified")          # the judge log of an A/B run is re-parsed too
+            # the test's embedder is a fake whose revision is not the registered bge-m3 pin: the verified wrapper must say so, and nothing else
+            self.assertEqual({e["code"] for e in ver["errors"]}, {"embedder_revision_wrong_revision"}, (r, ver["errors"][:3]))
+
+    def test_the_pinned_contract_rejects_a_and_b_so_the_new_validator_is_needed(self):
+        rep = H["contract"].validate_run(self.ok_out / "t2ab-mem0-A_seed0", self.syn.dir)
+        self.assertFalse(rep["ok"])
+        self.assertIn("manifest_strategy", {e["code"] for e in rep["errors"]})
+
+    def test_manifest_fields(self):
+        m = json.loads((self.ok_out / "t2ab-dk-mem-lexicon-A_seed0" / "run_manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual((m["pipeline_config"], m["dkmem_mode"], m["strategy"]), ("A", "lexicon", "dk-mem-lexicon"))
+        self.assertEqual((m["extraction_prompt_id"], m["extraction_calls"], m["extraction_failures"]), ("mem0_extraction_v4", 36, 0))
+        self.assertEqual(m["backbone"], "fake-backbone")
+        self.assertIn("lexicon_sha256", m)
+        self.assertNotIn("lexicon_sha256", json.loads((self.ok_out / "t2ab-mem0-A_seed0" / "run_manifest.json").read_text(encoding="utf-8")))
+        mb = json.loads((self.ok_out / "t2ab-mem0-B_seed0" / "run_manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(mb["extraction_prompt_id"], "native_b_v1")
+
+    def test_a_failed_extraction_makes_the_injected_pair_no_entry_and_the_run_still_validates(self):
+        for r in (p.name for p in self.fail_out.iterdir() if p.is_dir()):
+            rep = self.validate(self.fail_out, r)
+            self.assertTrue(rep["ok"], (r, rep["errors"][:3]))
+            self.assertGreaterEqual(rep["counts"]["extraction_failures"], 1)
+            self.assertIn("no_entry", rep["counts"]["injected_pair_status"])
+            first = next(p for p in rep["injected_pairs"] if p["conversation_id"] == self.syn.conv_ids[0])
+            self.assertEqual(first["status"], "no_entry")
+
+    def test_the_lexicon_sha_check_catches_a_run_validated_against_another_lexicon(self):
+        lex = Path(H["dk"].LEXICON_PATH)
+        ok = self.validate(self.ok_out, "t2ab-dk-mem-lexicon-A_seed0", lexicon_file=lex)
+        self.assertTrue(ok["ok"], ok["errors"][:3])
+        other = self.root / "other_lexicon.json"
+        other.write_text(lex.read_text(encoding="utf-8").replace("Pilot-reviewed.", "Pilot-reviewed (edited).", 1), encoding="utf-8")
+        bad = self.validate(self.ok_out, "t2ab-dk-mem-lexicon-A_seed0", lexicon_file=other)
+        self.assertIn("lexicon_sha256_mismatch", {e["code"] for e in bad["errors"]})
+
+    def copy_run(self, run="t2ab-mem0-A_seed0"):
+        t = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, t, ignore_errors=True)
+        for p in self.ok_out.iterdir():
+            if p.name == run or p.name.startswith(run + "."):
+                (shutil.copytree if p.is_dir() else shutil.copy)(p, t / p.name)
+        return t, run
+
+    def codes(self, t, run):
+        return {e["code"] for e in self.validate(t, run)["errors"]}
+
+    def edit_jsonl(self, path, fn):
+        rows = load_jsonl(path)
+        fn(rows)
+        path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+
+    def test_tampered_extraction_logs_and_entries_are_rejected(self):
+        t, run = self.copy_run()
+        self.assertEqual(self.codes(t, run), set())
+        log = t / f"{run}.extraction_log.jsonl"
+        original = log.read_text(encoding="utf-8")
+        cases = {
+            "extraction_log_row_status_mismatch": lambda rows: rows[0].update(status="failed", stored_text=None),
+            "extraction_log_row_stored_text_mismatch": lambda rows: rows[0].update(stored_text="something else"),
+            "extraction_log_turn_without_row": lambda rows: rows.pop(),
+            "extraction_log_duplicate_turn": lambda rows: rows.append(dict(rows[0])),
+            "extraction_log_row_prompt": lambda rows: rows[0].update(prompt_sha256="0" * 64),
+        }
+        for code, fn in cases.items():
+            self.edit_jsonl(log, fn)
+            self.assertIn(code, self.codes(t, run), code)
+            log.write_text(original, encoding="utf-8")
+        self.assertEqual(self.codes(t, run), set())
+
+    def test_a_manifest_that_misstates_its_extraction_is_rejected(self):
+        t, run = self.copy_run()
+        f = t / run / "run_manifest.json"
+        m = json.loads(f.read_text(encoding="utf-8"))
+        for key, value, code in (("extraction_failures", 3, "extraction_log_manifest_failure_count"), ("extraction_calls", 35, "extraction_log_manifest_call_count"),
+                                 ("extraction_prompt_sha256", "0" * 64, "extraction_log_manifest_prompt")):
+            f.write_text(json.dumps({**m, key: value}), encoding="utf-8")
+            self.assertIn(code, self.codes(t, run), code)
+        f.write_text(json.dumps(m), encoding="utf-8")
+
+    def test_an_entry_whose_gloss_is_not_the_logged_stored_text_is_rejected(self):
+        t, run = self.copy_run()
+        self.edit_jsonl(t / run / "pairwise_eval.jsonl", lambda rows: rows[0]["entry_a"].update(gloss="a different gloss"))
+        self.assertIn("entry_gloss_not_the_stored_text", self.codes(t, run))
+
+    def test_a_retrieval_log_that_hides_an_extraction_failure_is_rejected(self):
+        t, run = self.copy_run()
+        log = t / f"{run}.extraction_log.jsonl"
+        self.edit_jsonl(log, lambda rows: rows[0].update(status="failed", stored_text=None, raw_output="not json", error="x"))
+        codes = self.codes(t, run)
+        self.assertTrue({"extraction_log_vs_retrieval_log"} & codes, codes)
+
+
+    def test_the_replay_reproduces_every_ab_run_exactly_including_the_runs_with_failed_extractions(self):
+        import tier2.replay as RP
+        for out in (self.ok_out, self.fail_out):
+            res = RP.verify(out, self.syn.dir)
+            self.assertEqual(len(res), 4)
+            for run, v in res.items():
+                self.assertTrue(v["records_identical"] and v["store_identical"], (out.name, run, v))
+
+    def scored_inputs(self, out):
+        import tier2.replay as RP
+        import tier2.score_v2 as S
+        turns = RP.load_turns(self.syn.dir)
+        rlog = load_jsonl(out / "t2ab-mem0-A_seed0.tier2_retrieval_log.jsonl")
+        pairs, injected, _ = S.select_pairs(self.syn.dir, {x["turn_id"]: i for i, x in enumerate(rlog)}, None, None, set())
+        return S, RP, turns, pairs, injected
+
+    def test_an_injected_pair_with_a_failed_side_is_no_entry_and_stays_in_the_denominators(self):
+        S, RP, turns, pairs, injected = self.scored_inputs(self.fail_out)
+        run = "t2ab-mem0-A_seed0"
+        rlog = load_jsonl(self.fail_out / f"{run}.tier2_retrieval_log.jsonl")
+        props = {j["record_id"]: j["proposal"] for j in load_jsonl(self.fail_out / f"{run}.judge_log.jsonl")}
+        rep = RP.replay_run(rlog, turns, host="A", mode="off", distinctions=None, judge_proposals=props)
+        outs = S.outcomes(pairs, rlog, rep)
+        first = next(o for o in outs if o["conversation_id"] == self.syn.conv_ids[0])
+        self.assertEqual((first["direct_status"], first["direct_merged"], first["record_merged"]), ("no_entry", False, False))
+        rates = S.rates(outs)
+        total = {"different": sum(o["relation"] == "different" for o in outs), "same": sum(o["relation"] == "same" for o in outs)}
+        self.assertEqual(rates["FCR_direct"]["n"], total["different"])               # the failed pair is still counted
+        self.assertEqual(rates["MCR_direct"]["n"], total["same"])
+        self.assertEqual(rates["outcome_breakdown"][first["relation"]].get("no_entry"), 1)
+
+    def test_score_run_scores_a_and_b_runs_with_the_judge_proposals_and_the_replayed_gate(self):
+        S, RP, turns, pairs, injected = self.scored_inputs(self.ok_out)
+        evaluator = self.root / "evaluator"
+        evaluator.mkdir(exist_ok=True)
+        shutil.copy(self.pt, evaluator / "t2_passthrough_used.jsonl")
+        ok_embedder = {"status": "ok", "expected": "pin", "recorded": "pin", "requested": None, "model_id": "BAAI/bge-m3"}
+        for run, cfg, mode in (("t2ab-mem0-A_seed0", "A", "off"), ("t2ab-dk-mem-lexicon-B_seed0", "B", "lexicon")):
+            # the test embedder's revision is not the registered pin (that check has its own tests); everything else is real
+            with mock.patch.object(H["prov"].embedder_pin, "verify_manifest_embedder", lambda m, **kw: ok_embedder):
+                res = S.score_run(self.ok_out / run, run_data_dir=self.syn.dir, arm_frozen=TIER2 / "FROZEN_v1.0.json", evaluator=evaluator, turns=turns,
+                                  pairs=pairs, injected=injected, lexicon=real_lexicon(), data_dir=self.syn.dir, conv_ids=self.syn.conv_ids)
+            self.assertTrue(res["provenance_contract_ok"], res["provenance_errors"])
+            self.assertEqual((res["config"], res["mode"]), (cfg, mode))
+            self.assertFalse(res["final_records_changed_by_lexicon"], run)             # the replay reproduces the run's own final records
+            self.assertEqual(res["overall"]["FCR_direct"]["n"] + res["overall"]["MCR_direct"]["n"], len(pairs))
+            self.assertEqual(res["judge_log_verification"]["status"], "verified")
+            if mode == "lexicon":
+                self.assertIn("vetoes", res["gate"])
+
+
 class TestAuditAndReportDescribeTheJudge(unittest.TestCase):
     def manifest(self, sha, budget):
         return {"judge_prompt_id": "merge_judge_v1", "judge_prompt_sha256": sha, "generation_run_info": {"generation_params": {"max_new_tokens": budget}}}

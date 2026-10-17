@@ -585,7 +585,7 @@ class TestKernelDirectoryFreshness(unittest.TestCase):
 
     def test_the_manifest_hashes_describe_the_written_files(self):
         m = json.loads((self.ev / "payload_manifest.json").read_text(encoding="utf-8"))
-        self.assertEqual(m["n_files"], 70)
+        self.assertEqual(m["n_files"], 71)      # 70 + eval/tier2/entry_extraction.py: run_tier2 imports it, so every payload with the runner must carry it
         self.assertEqual(hashlib.sha256((self.ev / "t2_passthrough_used.jsonl").read_bytes()).hexdigest(), m["passthrough_sha256"])
         self.assertEqual(hashlib.sha256((self.ev / "qa_id_map.json").read_bytes()).hexdigest(), m["qa_id_map_sha256"])
         nb = (self.dir / "dkmem_tier2_smoke.ipynb").read_text(encoding="utf-8")

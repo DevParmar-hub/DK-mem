@@ -20,7 +20,7 @@ from dkmem.backends.llm import GenerationParams
 from dkmem.memory.judge import render_judge_prompt
 
 from .. import run_tier2 as R
-from ..judge_host import JUDGES_BY_ID, TokenMeter
+from ..judge_host import JUDGES_BY_ID, TokenMeter, check_frozen_prompt
 from .run_cases import judge_calls
 
 GIB = 1024 ** 3
@@ -81,6 +81,7 @@ def main(argv=None) -> int:
     rep["stages"]["embedding_batch_done"] = snapshot(torch)
     cases = [json.loads(l) for l in a.cases.read_text(encoding="utf-8").splitlines() if l.strip()]
     prompt = JUDGES_BY_ID[a.judge_prompt]
+    check_frozen_prompt(prompt)
     calls = judge_calls(cases)
     params = GenerationParams(max_new_tokens=R.JUDGE_MAX_NEW_TOKENS, do_sample=False, seed=0, batch_size=8)
     t1 = time.time()

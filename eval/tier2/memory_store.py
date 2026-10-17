@@ -1,7 +1,8 @@
 """Persistent per-conversation memory store for the Tier-2 pilot (system side: never sees gold, injection metadata or QA references).
 
 Design (deliberately minimal and non-destructive):
-* The store keeps every written entry (one entry per user turn, verbatim surface text) for the whole conversation, across all six sessions.
+* The store keeps every written entry (one entry per user turn whose extraction succeeded; verbatim surface text for configs C and D, the extraction
+  for A and B) for the whole conversation, across all six sessions.
 * Candidate retrieval ranks ALL earlier raw entries by cosine similarity (a caller-supplied metric, bge-m3 in the pilot) between the new entry's surface
   text and each stored entry's surface text, descending; ties break by write order (earlier first). The top-k are the candidates that get compared.
   Because candidates depend only on the raw entries (never on earlier merge decisions), the set of compared pairs is identical for every
@@ -27,6 +28,7 @@ class StoredEntry:
     extraction: object            # harness extraction object (has .distinction, .surface, .pair_id)
     entry_dict: dict              # the MemoryEntry dict written into pairwise records
     order: int = 0
+    text: str | None = None       # the STORED text when it is not the surface (configs A and B: English gloss / native fact); None = the surface
 
 
 @dataclass
@@ -77,5 +79,5 @@ class PersistentStore:
             out.append({"memory_id": f"{self.conversation_id}::mem::{members[0].entry_id}",
                         "member_entry_ids": [e.entry_id for e in members], "member_turn_ids": [e.turn_id for e in members],
                         "member_session_indices": [e.session_index for e in members],
-                        "text": RECORD_SEPARATOR.join(e.surface for e in members)})
+                        "text": RECORD_SEPARATOR.join(e.surface if e.text is None else e.text for e in members)})
         return sorted(out, key=lambda r: r["member_entry_ids"][0])

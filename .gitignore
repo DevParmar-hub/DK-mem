@@ -104,3 +104,8 @@ data/team_b_delivery/
 # Tier-2 v2.1 repair package: held-out specs/key and evaluator-side labels stay out of git (provenance in the package manifest)
 data/tier2_v2_1/heldout_sealed/
 data/tier2_v2_1/dev/splits_v2_1.jsonl
+
+# v2 arm self-test roots (tests/test_v2_arm.py builds a throwaway frozen arm here and deletes it)
+eval/tier2/_selftest_*/
+# v2 arm: the split assignment stays local, like data/tier2_v2_1/dev/splits_v2_1.jsonl (gold files are covered by the patterns above)
+eval/tier2/v2/banks/splits.jsonl

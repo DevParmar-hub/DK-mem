@@ -6,21 +6,75 @@
 \section{Benchmark}
 \label{sec:benchmark}
 
-\paragraph{Construction.} \todo{P2: Tier-2 controlled injection: each pair = two constructed user turns injected into a 6-session conversation
-(4 turns/session, 10 distractor user turns), session distance 1/3/5; QA after the last session. 69 conversations (36 Hindi gold-different,
-27 Hindi gold-same, 6 German gold-different).}
+\paragraph{Construction.} We evaluate on a controlled injection benchmark (Tier~2, v1.0). Each of 69 source pairs becomes two constructed
+user sentences that carry the pair's distinction marker (a kinship term, a name in Roman vs.\ Devanagari script, or a register pronoun)
+and state different attribute values (city, weekday or birthday month). Both are injected into one synthetic conversation of six weekly
+sessions, each with four alternating user/assistant turns, 1, 3 or 5 sessions apart (23 pairs each). The other ten user turns come from a
+fixed bank of hand-authored neutral distractors, validated to contain no injected name, lexicon term, register pronoun, family term or
+answer value; assistant turns are generic acknowledgements, and no turn is model-generated. After the last session, 111 questions are
+asked: one per member of a gold-different pair, with the other member's value as a forbidden answer, and one per gold-same pair that needs
+both facts; scoring is deterministic. The system under test sees only the conversations. The evaluated arm has 63 Hindi pairs (36
+gold-different, 27 gold-same) and 6 German gold-different register pairs (Table~\ref{tab:benchmark}). All sentences are constructed from
+templates; we make no claim about how often these distinctions occur in natural conversation.
 
-\paragraph{Labelling conventions.} \todo{P2: same name without qualifier = same person; register shift with identical vocative = same person;
-gold-same kinship pairs force identity with a shared name; a contextual qualifier overrides name identity. State that these are conventions.}
+\begin{table}[t]\centering\small
+\begin{tabular}{llrrr}
+\toprule
+Language & Class & gold-different & gold-same & Total \\
+\midrule
+Hindi  & kinship                              & 32 & 0  & 32 \\
+Hindi  & name variant (script)                & 0  & 20 & 20 \\
+Hindi  & name variant (qualifier)$^\dagger$   & 4  & 0  & 4  \\
+Hindi  & honorific register                   & 0  & 7  & 7  \\
+German & honorific register                   & 6  & 0  & 6  \\
+\midrule
+\multicolumn{2}{l}{Total (69 conversations, 111 questions)} & 42 & 27 & 69 \\
+\bottomrule
+\end{tabular}
+\caption{Pairs in the evaluated arm (Tier~2 v1.0); the mirror arm v1.1m has the same counts. $^\dagger$Labelled \emph{name\_variant} in
+v1.0; the in-team review and Team B's v2 package class them as contextual qualifiers.}
+\label{tab:benchmark}
+\end{table}
 
-\paragraph{Mirror arm.} \todo{P2: v1.1m counter-confound arm (what it controls for); same pair counts.}
+\paragraph{Labelling conventions.} Gold labels come by construction from the provisional, LLM-annotated Tier~1 labels. Since identity is
+underdetermined in short constructed sentences, the labels follow four stated conventions, not facts about the world: (1) the same name
+without a distinguishing qualifier is the same person; (2) a register shift (\emph{tu}/\emph{tum}/\emph{aap}) with the same vocative,
+e.g.\ ``Papa'', is the same person; (3) gold-same kinship pairs force identity with a shared name or apposition (no such pair is in v1.0);
+(4) a contextual qualifier (``school wali Neha'' vs.\ ``gym wali Neha'') overrides name identity. Four construction effects remain. The
+32 Hindi kinship pairs also differ in city or weekday, so the attribute alone separates them. Class is confounded with relation: Hindi
+kinship pairs are all gold-different, Hindi register pairs all gold-same, German register pairs all gold-different. Register turns address
+the relative directly inside a user--assistant chat (``Papa, tum Delhi ja rahe ho''), which is less natural than reported speech but keeps
+the pronoun. The 20 Hindi gold-same name-variant turns with a Devanagari name are the only Devanagari-script turns.
 
-\paragraph{Marathi and Gujarati extension.} \todo{P2 with P3/P4: v2.1 dev package: 126 specs (hi 81, mr 23, gu 22), 18 QA-contract repairs,
-new distractor banks; not evaluated here.}
+\paragraph{Mirror arm.} In v1.0 the attribute pattern predicts the label: gold-different pairs state one attribute with two values (e.g.\
+two cities), gold-same pairs two different attributes (e.g.\ a birthday month and a city). The mirror arm v1.1m removes this shortcut by
+replacing only member~$b$'s sentence in each of the 69 conversations: gold-different pairs now state a different attribute, gold-same
+pairs the same attribute with a conflicting value. Labels, markers, session positions and distractors are unchanged, so the pair counts
+are identical (63 Hindi, 6 German); together with v1.0, relation is balanced over the attribute pattern in every class $\times$ relation
+stratum. The mirror arm has no questions.
 
-\paragraph{In-team native review.} \todo{P2: report the review counts with the macros, e.g. Hindi \ReviewHiPairsCorrect{}/\ReviewHiPairsTotal{}
-judged correct, \ReviewHiPairsWrong{} wrong, \ReviewHiPairsAmbiguous{} ambiguous; Marathi \ReviewMrPairsCorrect{}/\ReviewMrPairsTotal{};
-Gujarati \ReviewGuPairsCorrect{}/\ReviewGuPairsTotal{}. Say clearly: reviewers are co-authors (not independent) and saw the labels.}
+\paragraph{Marathi and Gujarati extension.} Team B's draft v2 package adds Marathi and Gujarati items and drops German. Its repaired
+development version v2.1 has 126 pair specifications (Hindi 81, Marathi 23, Gujarati 22). Eighteen were repaired to satisfy the
+question--answer contract (e.g.\ both members stated the same city, or the question contained its own answer), with relation, class,
+language and ids unchanged; 13 of these change Marathi or Gujarati text without prior native verification. New banks of 30 hand-authored
+distractor user turns were written for each language. No system was run on v2.1, and we report no Marathi or Gujarati result.
 
-\paragraph{Splits and exposure.} \todo{P2: everything reported is development data; Team B's v2 test labels were exposed in a verification
-prompt, so no held-out test set exists yet.}
+% Review counts: verdicts come from the generated \ReviewHiPairs... macros (paper/tools/summarize_reviews.py). The awkward (14) and
+% class (4) counts are taken from paper/review/hi_pairs_review.csv by hand because no generated macro exists for those columns yet.
+\paragraph{In-team native review.} One native speaker per language, each a co-author, reviewed the items with the gold labels visible,
+so the review is in-team and not independent. Each Hindi pair evaluated in Sec.~\ref{sec:results} was judged on label correctness under
+the conventions above, naturalness and class. Of the \ReviewHiPairsTotal{} Hindi pairs, \ReviewHiPairsCorrect{} labels were judged
+correct, \ReviewHiPairsWrong{} wrong and \ReviewHiPairsAmbiguous{} ambiguous: the only pair that shifts between \emph{tu} and \emph{tum}
+rather than \emph{tum} and \emph{aap} (addressed to ``Maa''), which Team B's audit also flagged. The four qualifier pairs were marked as
+misclassified, because the qualifier, not the name form, carries the distinction. For naturalness, 14 pairs were judged awkward but
+plausible and none implausible; the comments cite formal weekday names (e.g.\ \emph{mangalvar}) in casual Hinglish and \emph{tum}/\emph{aap}
+switches towards the same addressee. No label was edited: pairs marked wrong or ambiguous are excluded only in a sensitivity analysis
+(Sec.~\ref{sec:results}), and the primary numbers use all pairs. In the extension, \ReviewMrPairsCorrect{} of \ReviewMrPairsTotal{}
+Marathi and \ReviewGuPairsCorrect{} of \ReviewGuPairsTotal{} Gujarati specifications were judged correct. The six German pairs had no
+native review.
+
+\paragraph{Splits and exposure.} Every number in this paper is a development result. The 63 Hindi v1.0 pairs were used throughout
+development and are in the development split of Team B's v2 package. That package's 30-pair test split of new items had its sentences
+and gold labels listed in a prompt sent to an LLM verifier; we treat it as exposed, moved it to development data in v2.1, and do not use
+it as a test set. A 24-item Hindi reserve set was written after that exposure and partly derives from exposed items, so it is not blind
+either. No held-out test set exists yet.
