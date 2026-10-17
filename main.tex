@@ -1,0 +1,694 @@
+% =====================================================================
+%  Where the Distinction Dies: Language-Induced False Consolidation
+%  in LLM Agent Memory
+%
+%  FIRST DRAFT (pre-experiment framing): Abstract, Section I, Section III.
+%  Section II (Related Work) is a reserved stub of ~0.8 page.
+%  Sections IV onward are listed at the end as commented stubs.
+%
+%  Every [NEEDS INPUT: ...], [FIGURE NEEDED: ...] and [TABLE NEEDED: ...]
+%  is printed in red. Search the source for "NEEDS INPUT" to find them all.
+%  Delete the \pending{} wrapper once an item is resolved.
+% =====================================================================
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{placeins}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{url}
+
+% Red marker for unresolved items (remove before submission).
+\newcommand{\pending}[1]{\textcolor{red}{#1}}
+
+% Outcome labels of the compatibility test.
+\newcommand{\Comp}{\textsc{comp}}
+\newcommand{\Inc}{\textsc{inc}}
+\newcommand{\Und}{\textsc{und}}
+
+% Lets the faculty block start on a new line below the student block.
+\makeatletter
+\newcommand{\linebreakand}{%
+  \end{@IEEEauthorhalign}
+  \hfill\mbox{}\par
+  \mbox{}\hfill\begin{@IEEEauthorhalign}
+}
+\makeatother
+
+\begin{document}
+
+\title{Where the Distinction Dies: Language-Induced False Consolidation in LLM Agent Memory}
+
+\author{
+\IEEEauthorblockN{Ritwik Satghare\textsuperscript{*}, Aarya Shah\textsuperscript{*}, Jash Nikumbhe\textsuperscript{*} and Dev Parmar\textsuperscript{*}}
+\IEEEauthorblockA{Department of Computer Engineering\\
+SVKM's Dwarkadas J. Sanghvi College of Engineering, Mumbai, India\\
+ritwik.satghare14@svkmmumbai.onmicrosoft.com, aarya.shah54@svkmmumbai.onmicrosoft.com\\
+jash.nikumbhe93@svkmmumbai.onmicrosoft.com, dev.parmar78@svkmmumbai.onmicrosoft.com}
+\linebreakand
+\IEEEauthorblockN{Dr. Kranti Ghag}
+\IEEEauthorblockA{Associate Professor\\
+Department of Computer Engineering\\
+SVKM's Dwarkadas J. Sanghvi College of Engineering\\
+Mumbai, India\\
+kranti.ghag@djsce.ac.in}
+\and
+\IEEEauthorblockN{Dr. Meera Narvekar}
+\IEEEauthorblockA{Head of Department\\
+Department of Computer Engineering\\
+SVKM's Dwarkadas J. Sanghvi College of Engineering\\
+Mumbai, India\\
+meera.narvekar@djsce.ac.in}
+}
+
+\maketitle
+
+% Equal-contribution note, placed as an unnumbered first-page footnote.
+\begingroup
+\renewcommand{\thefootnote}{*}
+\footnotetext{These authors contributed equally to this work.}
+\endgroup
+
+% ---------------------------------------------------------------------
+\begin{abstract}
+Long-term memory systems for large language model (LLM) agents extract
+facts from conversation and consolidate them, deciding whether a new fact
+duplicates, updates, or is distinct from one already stored. A wrong
+identity decision does not merely degrade an answer; it overwrites a true
+fact. For multilingual and code-mixed users, the only evidence that two
+facts concern different people may be a lexical distinction that English
+does not mark, such as the Hindi kinship terms \textit{chachi} and
+\textit{mausi}, both glossed as ``aunt.'' We study language-induced false
+consolidation: the wrongful merging or supersession of two distinct facts
+whose only distinguishing evidence is a source-language lexical
+distinction. We ask at which stage of a memory pipeline such a distinction
+stops influencing the merge decision, and whether an explicit distinction
+key prevents the resulting merge where threshold tuning, prompting, and
+verbatim storage do not. Four pipeline configurations isolate
+forced-English extraction, native-language extraction, an LLM merge
+judge over verbatim text, and embedding-threshold merging. We propose DK-Mem, a
+lightweight layer that extracts distinction keys with a lexicon-first
+cascade and applies them as a cannot-link constraint in front of the host
+merge mechanism, without training and, in its lexicon-only form, without
+additional model calls. Evaluation uses controlled minimal pairs with both
+same-entity and different-entity cases and reports false and missed
+consolidation rates jointly across a threshold sweep.
+\pending{[NEEDS INPUT: 1--2 sentence summary of the final results on the
+frozen gold set, taken from the final result files: (i) Config~D frontier,
+gate off vs.\ lexicon gate; (ii) kinship false consolidation with and
+without the gate under the LLM-judge configurations; (iii) the
+missed-consolidation cost of the gate on honorific/register pairs; (iv) the
+fact that the gate does not improve every configuration]}
+% ---- Candidate results sentence, built ONLY from the provisional
+% ---- 173-pair numbers in the master context. Use it only after the
+% ---- gold set is frozen and the numbers are re-confirmed:
+% On a provisional set of 173 minimal pairs, the gate removed all kinship
+% false merges under the 1.5B and 7B merge judges (16/32 and 23/32 to 0/32)
+% and, on the embedding-threshold frontier, never raised and at 28 of 33
+% matched missed-consolidation levels lowered the false consolidation rate;
+% its cost was concentrated in five vetoed honorific/register same-entity
+% pairs, and a 3B judge over verbatim text already made no kinship false
+% merges, so the gate acts as a safeguard rather than a universal
+% improvement.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Agent memory, memory consolidation, large language models, multilingual
+natural language processing, code-mixing, kinship terminology, cannot-link
+constraints.
+\end{IEEEkeywords}
+
+% =====================================================================
+\section{Introduction}
+
+LLM agents that serve the same user over weeks need a memory that outlives
+a single context window. Systems such as Mem0~\cite{mem0} and
+A-Mem~\cite{amem} meet this need in two steps: they extract salient facts
+from each conversation turn, and they consolidate those facts against what
+is already stored. In Mem0, for instance, an LLM compares each new fact
+with its most similar stored memories and chooses to add it, update an
+existing memory, delete a contradicted one, or do nothing~\cite{mem0}.
+Consolidation is therefore an identity decision. When the system wrongly
+concludes that two facts refer to the same thing, the older fact is
+merged away or superseded, and no later retrieval step can recover it
+because it is no longer in the store.
+
+Recent work has begun to measure and guard this write path. HaluMem scores
+memory extraction, memory updating, and question answering separately so
+that errors can be traced to the operation that introduced
+them~\cite{halumem}. MOSAIC checks each new fact against its graph
+neighbours at save time and updates or deletes entries it finds
+contradictory~\cite{mosaic}. On the multilingual side, some deployed
+systems deliberately keep the user's language: Hindsight stores facts and
+observations in the language of the source material by default, although
+an observation built from facts in several languages is written in the
+majority language~\cite{hindsight}.
+
+These safeguards target contradictions between values of the same entity,
+or update errors in general. They do not ask whether the evidence that two
+facts concern \emph{different} entities survived long enough to reach the
+merge decision. For multilingual users that evidence is often a single
+word. Hindi distinguishes \textit{chachi} (father's brother's wife) from
+\textit{mausi} (mother's sister), whereas English calls both ``aunt.'' A
+user who says \textit{meri chachi Pune mein rehti hai} (``my chachi lives
+in Pune'') in one session and \textit{meri mausi Delhi mein rehti hai}
+(``my mausi lives in Delhi'') in another has described two people. If any
+stage of the pipeline reduces both to ``the user's aunt lives in $X$,'' the
+consolidation step can read the second fact as a relocation and delete the
+first. We call this \emph{language-induced false consolidation}: the
+wrongful merging or supersession of two distinct facts whose only
+distinguishing evidence is a source-language lexical distinction. It is a
+memory-integrity failure rather than a translation-quality failure, since a
+true fact is destroyed, not merely mistranslated. To our knowledge
+\pending{[NEEDS INPUT: confirm after the remaining scoop searches on
+multilingual/code-mixed memory consolidation and cross-lingual entity
+resolution in agent memory; otherwise soften to ``we are not aware of'']},
+no prior work isolates consolidation errors in agent memory whose cause is
+such a distinction under cross-lingual or code-mixed input.
+
+Keeping the original language is not obviously a remedy, because the
+distinction can be lost at four points: (L1) an extractor instructed to
+write English removes it before storage; (L2) an extractor instructed to
+keep the user's language drifts into English or into another script
+anyway; (L3) the distinction is stored, but the LLM merge judge treats both
+terms as ``aunt''; and (L4) the distinction is stored, but a multilingual
+embedder places the two facts close enough to pass the merge threshold. We
+therefore measure where the distinction is lost instead of assuming it, and
+ask: \emph{when a multilingual user states two facts that differ only in a
+source-language distinction, at which stage of a memory pipeline does the
+distinction stop influencing the merge decision, and does an explicit
+distinction key, used as a cannot-link constraint at merge time, prevent
+false consolidation where threshold tuning, prompting, and verbatim storage
+do not?}
+
+To answer the second half, we propose DK-Mem, a distinction-aware layer
+placed in front of whatever merge mechanism the host system uses. DK-Mem
+stores the source-language distinction as a structured key beside each
+memory and refuses a merge when two keys disagree. The constraint is not
+new: it is the attribute-agreement test of deterministic coreference
+resolution~\cite{sieve2010,sieve2013} and the cannot-link constraint of
+constrained clustering~\cite{wagstaff2001}. What differs is the source of
+the attribute, namely a lexical distinction that the memory pipeline itself
+may erase, extracted lexicon-first with the kinship slice derived from
+Kinbank~\cite{kinbank}, and the setting, namely identity decisions during
+agent memory consolidation. The contributions of this paper are:
+\begin{itemize}
+\item a stage-attribution design of four pipeline configurations that
+isolates loss points L1--L4, including logging of what a native-language
+extractor actually writes;
+\item DK-Mem, a three-valued compatibility gate over source-language
+distinction keys that can be placed in front of either an LLM merge judge
+or an embedding-threshold merge, with a lexicon-only variant that adds no
+model calls;
+\item a controlled minimal-pair evaluation with same-entity and
+different-entity cases, reported as false and missed consolidation rates
+together and compared with simply raising the merge threshold
+\pending{[NEEDS INPUT: decide whether the probe set, lexicon and harness
+will be publicly released; if so, give the repository URL]};
+\item \pending{[NEEDS INPUT: one result-backed sentence stating what the
+stage-attribution experiment found, e.g.\ at which of L1--L4
+false consolidation was observed and whether verbatim storage alone
+prevented it, from the final frozen runs]}.
+\end{itemize}
+
+The remainder of the paper is organized as follows. Section~II reviews
+related work. Section~III formalizes the problem and describes the
+stage-attribution configurations and DK-Mem. Section~IV describes the
+experimental setup, Section~V presents and discusses the results, and
+Section~VI concludes.
+% NOTE: update the paragraph above if the final section plan changes.
+
+% =====================================================================
+\section{Related Work}
+
+\subsection{Long-Term Agent Memory}
+Persistent-memory systems vary in how they turn dialogue into revisable state. Mem0 describes an incremental pipeline that extracts, consolidates, and retrieves salient information, including a graph-memory variant for representing relations among memories~\cite{mem0}. A-Mem instead organizes information as linked, structured notes; adding a note can lead to updates in the attributes or contextual representations of existing notes~\cite{amem}. These designs illustrate that memory updates may be mediated by operation labels, graph relations, or evolving note context. Their reported evaluations focus on memory utility and downstream task performance, rather than on whether a source-language feature distinguishing two entities survives each update stage.
+
+\subsection{Memory Integrity and Operation-Level Evaluation}
+HaluMem separates memory extraction, memory updating, and question answering into distinct evaluation operations~\cite{halumem}. This provides a useful precedent for locating errors within a memory pipeline instead of attributing every failure to final answer generation. MOSAIC addresses integrity at write time by storing information in an entity-typed graph and checking new entries against related graph neighbours for conflicts~\cite{mosaic}. It is therefore closely related to save-time validation, but its stated conflict-detection setting does not isolate cases where two entities are distinct because of a source-language lexical feature. Together, these works motivate operational evaluation and write-time safeguards without establishing whether multilingual identity evidence is preserved or used during consolidation.
+
+\subsection{Language Preservation and Lexical Resources}
+Hindsight's documentation describes retaining the source language by default while allowing a configured output language; it also treats language instructions as model guidance rather than a guarantee of the generated representation~\cite{hindsight}. This distinction matters for DK-Mem: retaining surface text and using a distinction in a later merge decision are separate properties. Kinbank provides a cross-linguistic resource for kinship terminology and can inform the coverage of a distinction lexicon~\cite{kinbank}. It supplies linguistic evidence about kinship systems, not an evaluation of how agent memories extract or consolidate those distinctions.
+
+\subsection{Identity Constraints and Research Gap}
+Attribute-agreement rules in deterministic coreference resolution and must-link/cannot-link constraints in clustering are established ways to restrict otherwise plausible associations~\cite{sieve2010,sieve2013,wagstaff2001}. DK-Mem does not claim the general compatibility test or cannot-link mechanism as new. Its narrower focus is the evidence supplied to that test: a source-language distinction that may be omitted, normalized, or ignored within an agent-memory pipeline. The cited memory systems, evaluation work, and linguistic resources do not jointly test where such evidence stops influencing an update decision or whether using it at consolidation changes false and missed consolidation. The experiments in this paper address that scoped question without presuming that the failure occurs in every system or configuration.
+
+\section{Proposed Methodology}
+
+The methodology has two parts. A stage-attribution harness runs the same
+utterance pairs through four pipeline configurations, each designed to
+expose one loss point, so that false consolidation can be attributed to a
+stage. DK-Mem is then inserted into each configuration as an optional
+gate, so that the effect of an explicit distinction key can be measured
+against the same host. Fig.~\ref{fig:pipeline} shows the pipeline and where
+each configuration diverges.
+
+\begin{figure*}[t]
+\centering
+\fbox{\parbox{0.95\textwidth}{\centering\vspace{1.2cm}
+\pending{[FIGURE NEEDED: pipeline diagram. Left to right: user utterance
+$\rightarrow$ fact extraction $\rightarrow$ memory representation
+(gloss, distinction key, surface) $\rightarrow$ candidate retrieval
+$\rightarrow$ host merge decision (LLM judge or $\mathrm{sim} > \tau$)
+$\rightarrow$ DK-Mem compatibility gate (\Comp/\Inc/\Und) $\rightarrow$
+memory store, with a feedback arrow from the store to candidate
+retrieval. A parallel branch from the raw utterance through
+lexicon lookup (with optional LLM fallback) to the distinction key.
+Loss points L1--L4 marked at extraction (L1, L2), merge judge (L3) and
+embedding similarity (L4); configurations A--D shown as the path each
+one takes.] }\vspace{1.2cm}}}
+\caption{Memory consolidation pipeline with the four loss points
+(L1--L4) isolated by Configurations~A--D and the position of the
+DK-Mem compatibility gate.}
+\label{fig:pipeline}
+\end{figure*}
+
+\subsection{Problem Formulation}
+
+Let $(u_a, u_b)$ be two user utterances made in different sessions, with a
+gold identity label $y \in \{\mathrm{same}, \mathrm{diff}\}$ stating
+whether they describe the same entity. A memory pipeline writes the fact
+extracted from $u_a$ and then the fact extracted from $u_b$. Its host
+decision $h(a,b) \in \{0,1\}$ equals 1 when the entry derived from $u_b$
+is merged into the entry derived from $u_a$ or supersedes it, and 0 when
+both are kept
+\pending{[NEEDS INPUT: exact mapping from merge-judge labels to $h$, e.g.\
+whether both UPDATE and DELETE count as $h=1$ and how NOOP is treated]}.
+A third outcome, $\varnothing$, records that the extractor produced no
+entry for $u_a$ or $u_b$; it is an extraction failure, not a merge
+decision, and is reported separately
+\pending{[NEEDS INPUT: decide whether no-entry pairs are excluded from the
+FCR/MCR denominators or counted as unmerged; the current Config~B table
+keeps them in denominators of 42 and 27, which counts 5 gold-same
+extraction failures as missed consolidations]}.
+
+Each pair belongs to a distinction class
+$c \in \{\text{kinship}, \text{honorific/register}, \text{name variant}\}$
+and is constructed so that $u_a$ and $u_b$ are distinct in the source
+language but identical after English normalization. A
+\emph{language-induced false consolidation} is a pair with
+$y = \mathrm{diff}$ and $h(a,b) = 1$.
+
+\subsection{Stage-Attribution Configurations}
+
+Table~\ref{tab:configs} lists the four configurations. Each is run with the
+gate off and with the gate on, and each LLM role (extractor and merge
+judge) is filled by an instruction-tuned Qwen2.5 model~\cite{qwen25}
+\pending{[NEEDS INPUT: confirm that the same backbone serves as both
+extractor and merge judge within a run, and give decoding settings
+(temperature, greedy or sampled, maximum tokens)]}.
+
+\begin{table}[t]
+\caption{Stage-Attribution Configurations}
+\label{tab:configs}
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|c|l|l|l|c|}
+\hline
+\textbf{Cfg.} & \textbf{Extraction} & \textbf{Storage} & \textbf{Merge decision} & \textbf{Isolates}\\
+\hline
+A & English-forced & English gloss & LLM judge & L1\\
+B & Native-language & Extractor output & LLM judge & L2\\
+C & None & Verbatim surface & LLM judge & L3\\
+D & None & Verbatim surface & bge-m3, $\mathrm{sim} > \tau$ & L4\\
+\hline
+\end{tabular}
+\end{table}
+
+\textit{Config~A} instructs the extractor to write facts in English
+\pending{[NEEDS INPUT: source of the Config~A extraction prompt, i.e.\ Mem0's
+prompt with an English-output instruction or our own frozen prompt, with
+its identifier]}, so any distinction lost before storage is attributable
+to L1. \textit{Config~B} uses our frozen native-language prompt
+(\texttt{native\_b\_v1}), which asks the extractor to record one fact in
+the user's language and script and not to translate it. Config~B is
+deliberately not the Mem0 default: Mem0's extraction prompts and update
+step differ across releases
+\pending{[NEEDS INPUT: the Mem0 release versions and source files compared
+when this was checked, to cite as evidence]}, so a version-pinned Mem0 run
+is treated as a separate baseline (Section~IV). For Config~B we log what the extractor
+actually wrote as three separate quantities: language drift (output not in
+the source language), script drift (same language, different script), and
+corruption (garbled, invented, or altered content)
+\pending{[NEEDS INPUT: how each of the three is detected, e.g.\ manual
+annotation, Unicode script ranges, or a language-identification tool, and
+by whom]}.
+
+\textit{Config~C} skips extraction and stores the verbatim utterance, so
+the distinction is present at decision time and any false consolidation
+is attributable to the merge judge (L3)
+\pending{[NEEDS INPUT: source and identifier of the merge-judge prompt used
+in A--C, e.g.\ Mem0 update prompt of a pinned version or our own frozen
+prompt, and the label set it returns]}. \textit{Config~D} also stores the
+verbatim utterance but replaces the judge with a similarity threshold over
+bge-m3 embeddings~\cite{bgem3},
+\begin{equation}
+h_\tau(a,b) = \mathbb{I}\!\left[\cos(\mathbf{e}_a,\mathbf{e}_b) > \tau\right],
+\label{eq:threshold}
+\end{equation}
+where $\mathbb{I}[\cdot]$ is the indicator function, $\mathbf{e}_a$ and
+$\mathbf{e}_b$ are the embeddings of $u_a$ and $u_b$, and $\tau$ is the
+merge threshold
+\pending{[NEEDS INPUT: confirm dense-vector cosine similarity only (not
+bge-m3 sparse or multi-vector scores) and that the raw utterance text is
+embedded]}. False consolidation in D is attributable to L4.
+
+\subsection{Memory Representation}
+
+DK-Mem stores each memory as a triple
+\begin{equation}
+m = (g,\ d,\ s),
+\label{eq:entry}
+\end{equation}
+where $g$ is the normalized gloss used as the retrieval key (e.g.,
+``user's aunt lives in Pune''), $s$ is the verbatim surface utterance, and
+$d : \mathcal{F} \rightharpoonup \mathcal{V}$ is a partial map from
+distinction features $\mathcal{F}$ (kinship, honorific/register, name) to
+source-language values (e.g., $d(\text{kin}) = \textit{chachi}$). The key
+$d$ is computed from the raw utterance rather than from the extracted
+fact, so it is available even when extraction has removed the distinction
+\pending{[NEEDS INPUT: confirm that the implementation computes $d$ from
+the raw utterance in all four configurations]}.
+
+\subsection{Distinction Extraction}
+
+Keys are extracted by a lexicon-first cascade. A distinction lexicon
+$\mathcal{L}$ maps surface forms to feature--value pairs and is matched
+deterministically against the utterance. Its kinship slice is generated
+from Kinbank, a typological database of kinship terminology across
+languages~\cite{kinbank}, so that the lexicon covers distinctions a
+language lexicalizes and English does not, rather than an ad hoc word
+list. Honorific/register and name-variant entries are curated separately
+\pending{[NEEDS INPUT: number of lexicon entries per class; which Kinbank
+language varieties were used; how romanized and native-script spellings
+and honorific suffixes are normalized before matching; how name variants
+are mapped to a common value]}.
+Only spans the lexicon flags as ambiguous are passed to a small LLM
+fallback
+\pending{[NEEDS INPUT: fallback model and size, its prompt identifier, and
+the exact rule that marks a span as ambiguous]}. We evaluate two variants:
+\emph{lexicon-only}, which needs no model call, and \emph{lexicon+LLM}.
+
+\subsection{Distinction-Compatibility Gate}
+
+Let $\mathcal{F}_{\mathrm{id}} \subseteq \mathcal{F}$ be the features
+that discriminate identity
+\pending{[NEEDS INPUT: final membership of $\mathcal{F}_{\mathrm{id}}$, in
+particular whether honorific/register is identity-discriminating, since
+this choice determines the gate's missed-consolidation cost]}. For two
+entries $a$ and $b$ define the shared and one-sided identity features
+\begin{align}
+S_{ab} &= \mathrm{dom}(d_a) \cap \mathrm{dom}(d_b) \cap \mathcal{F}_{\mathrm{id}},\\
+O_{ab} &= \big(\mathrm{dom}(d_a) \,\triangle\, \mathrm{dom}(d_b)\big) \cap \mathcal{F}_{\mathrm{id}},
+\end{align}
+where $\triangle$ is the symmetric difference. The compatibility test is
+\begin{equation}
+\gamma(a,b)=
+\begin{cases}
+\Inc, & \exists f \in S_{ab}:\ d_a(f) \neq d_b(f),\\
+\Und, & \text{otherwise, if } O_{ab} \neq \emptyset,\\
+\Comp, & \text{otherwise.}
+\end{cases}
+\label{eq:compat}
+\end{equation}
+\Inc{} is a cannot-link constraint: the keys are different values of the
+same feature (\textit{chachi} vs.\ \textit{mausi}), so both entries are
+kept. \Und{} arises when only one entry carries a key for an identity
+feature; the merge is blocked and the entries are linked with an
+unresolved flag rather than silently merged or blindly duplicated
+\pending{[NEEDS INPUT: confirm whether the current implementation writes
+the unresolved link or only blocks the merge]}. The gated decision is
+\begin{equation}
+\hat{h}(a,b) = h(a,b)\cdot \mathbb{I}\!\left[\gamma(a,b) = \Comp\right],
+\label{eq:gate}
+\end{equation}
+where $h$ is the host decision, either the LLM judge (Configs~A--C) or
+$h_\tau$ of~(\ref{eq:threshold}) (Config~D). Because $\hat{h} \le h$ for
+every pair, the gate can only veto merges and never creates one. It
+therefore cannot raise the false consolidation rate or lower the missed
+consolidation rate of its host; its value lies entirely in which merges it
+vetoes.
+
+The gate's cost is one dictionary lookup per utterance, one comparison of
+two small maps per candidate pair, and storage of the key and surface text
+beside each entry. The lexicon-only variant adds no model call and
+requires no training.
+
+\subsection{Evaluation Protocol and Metrics}
+
+Pairs come from a minimal-pair probe set in which each pair has a gold
+identity label and a distinction class, and each class contains both
+same-entity and different-entity pairs so that a system cannot score well
+by never merging
+\pending{[NEEDS INPUT: add kinship same-entity controls; in the current
+in-scope split all 27 gold-same pairs are honorific/register (7) or name
+variant (20), so the gate's cost on kinship is untested]}.
+Each pair is processed from an empty store by writing $u_a$ and then $u_b$
+\pending{[NEEDS INPUT: confirm this per-pair protocol, and how the outcome
+is read, i.e.\ from the judge log or from the final store]}. With
+$P_{\mathrm{diff}}$ and $P_{\mathrm{same}}$ the gold-different and
+gold-same pairs,
+\begin{align}
+\mathrm{FCR} &= \frac{\big|\{p \in P_{\mathrm{diff}} : \hat{h}(p) = 1\}\big|}{|P_{\mathrm{diff}}|},
+\label{eq:fcr}\\
+\mathrm{MCR} &= \frac{\big|\{p \in P_{\mathrm{same}} : \hat{h}(p) = 0\}\big|}{|P_{\mathrm{same}}|}.
+\label{eq:mcr}
+\end{align}
+FCR alone is insufficient, since a store that never merges has
+$\mathrm{FCR}=0$; the two are always reported together. For Config~D the
+threshold is swept over a grid $\mathcal{T}$
+\pending{[NEEDS INPUT: exact $\tau$ grid used for the final sweep]}, each
+$\tau$ yields one operating point, and the non-dominated points form the
+FCR--MCR frontier. Systems are compared at matched missed consolidation by
+\begin{equation}
+F_{\mathcal{S}}(\mu) = \min_{\tau \in \mathcal{T}} \big\{\mathrm{FCR}_{\mathcal{S}}(\tau) : \mathrm{MCR}_{\mathcal{S}}(\tau) \le \mu \big\},
+\label{eq:matched}
+\end{equation}
+the lowest false consolidation system $\mathcal{S}$ reaches without
+exceeding missed-consolidation level $\mu$. The ungated sweep of Config~D
+is the raise-$\tau$ baseline, so~(\ref{eq:matched}) directly tests whether
+the gate does better than simply being more cautious. The LLM-judge
+configurations yield one operating point each. FCR and MCR are also
+reported per distinction class
+\pending{[NEEDS INPUT: confirm the uncertainty estimate to be reported,
+e.g.\ paired bootstrap 95\% confidence intervals over pairs, and the number
+of seeds for the sampled LLM configurations; Config~D is deterministic]}.
+
+% =====================================================================
+% REMAINING SECTIONS (not drafted yet)
+% \section{Experimental Setup}      % data counts, kappa, backbones, baselines
+% \section{Results and Discussion}  % frontier figure, main table, per-class
+% \section{Conclusion}
+% =====================================================================
+
+\begin{thebibliography}{99}
+
+\bibitem{mem0}
+P.~Chhikara, D.~Khant, S.~Aryan, T.~Singh, and D.~Yadav, ``Mem0: Building
+production-ready AI agents with scalable long-term memory,''
+arXiv:2504.19413, 2025.
+
+\bibitem{amem}
+W.~Xu, Z.~Liang, K.~Mei, H.~Gao, J.~Tan, and Y.~Zhang, ``A-Mem: Agentic
+memory for LLM agents,'' in \textit{Adv. Neural Inf. Process. Syst.
+(NeurIPS)}, 2025.
+% TODO: VERIFY BIBLIOGRAPHIC DETAILS (volume/page numbers of NeurIPS 2025 proceedings)
+
+\bibitem{halumem}
+D.~Chen, S.~Niu, K.~Li, P.~Liu, X.~Zheng, B.~Tang, X.~Li, F.~Xiong, and
+Z.~Li, ``HaluMem: Evaluating hallucinations in memory systems of agents,''
+arXiv:2511.03506, 2025.
+
+\bibitem{mosaic}
+Z.~Zhao, X.~Guo, L.~Lv, M.~Wang, M.~Li, and S.~Li, ``Accurate and efficient
+long-term memory for LLM agents,'' arXiv:2607.16211, 2026.
+% TODO: VERIFY BIBLIOGRAPHIC DETAILS (submission date shown inconsistently on arXiv page)
+
+\bibitem{hindsight}
+Vectorize, ``Multilingual support,'' Hindsight documentation, v0.10.
+[Online]. Available: \url{https://hindsight.vectorize.io/developer/multilingual}.
+[Accessed: Oct. 8, 2026].
+
+\bibitem{sieve2010}
+K.~Raghunathan, H.~Lee, S.~Rangarajan, N.~Chambers, M.~Surdeanu,
+D.~Jurafsky, and C.~Manning, ``A multi-pass sieve for coreference
+resolution,'' in \textit{Proc. Conf. Empirical Methods Natural Lang.
+Process. (EMNLP)}, 2010, pp. 492--501.
+
+\bibitem{sieve2013}
+H.~Lee, A.~Chang, Y.~Peirsman, N.~Chambers, M.~Surdeanu, and D.~Jurafsky,
+``Deterministic coreference resolution based on entity-centric,
+precision-ranked rules,'' \textit{Comput. Linguist.}, vol.~39, no.~4,
+pp. 885--916, 2013.
+
+\bibitem{wagstaff2001}
+K.~Wagstaff, C.~Cardie, S.~Rogers, and C.~Schr\"{o}dl, ``Constrained
+k-means clustering with background knowledge,'' in \textit{Proc. 18th Int.
+Conf. Mach. Learn. (ICML)}, 2001, pp. 577--584.
+
+\bibitem{kinbank}
+S.~Passmore \textit{et al.}, ``Kinbank: A global database of kinship
+terminology,'' \textit{PLOS ONE}, vol.~18, no.~5, art. e0283218, 2023.
+
+\bibitem{qwen25}
+Qwen Team (A.~Yang \textit{et al.}), ``Qwen2.5 technical report,''
+arXiv:2412.15115, 2024.
+
+\bibitem{bgem3}
+J.~Chen, S.~Xiao, P.~Zhang, K.~Luo, D.~Lian, and Z.~Liu, ``M3-Embedding:
+Multi-linguality, multi-functionality, multi-granularity text embeddings
+through self-knowledge distillation,'' arXiv:2402.03216, 2024.
+% TODO: VERIFY BIBLIOGRAPHIC DETAILS (cite the Findings of ACL 2024 version if preferred)
+
+\end{thebibliography}
+
+\appendices
+
+\section{Proposed Method}
+\label{app:method}
+
+DK-Mem adds a distinction-aware check to a host memory system's consolidation path. Given a multilingual or code-mixed user input, the host extractor identifies factual assertions for possible storage. For each assertion, the pipeline retains the original source-language span, produces a concise gloss, and extracts any identity-relevant linguistic distinction. The gloss supports the host system's representation and retrieval; it does not replace the original wording. Each resulting memory therefore retains the gloss, distinction record, and surface text together.
+
+Distinction extraction is lexicon-first. A curated lexicon is checked for a recognized distinction, with the initial scope centered on kinship. If no recognized entry is returned, an LLM fallback is asked to identify a supported distinction from the assertion and its context. If neither source supplies a usable distinction, the record is marked unknown rather than assigning a value. This sequence preserves an explicit distinction when available without assuming that every input has one.
+
+The host memory system retrieves candidate memories using its existing retrieval procedure; DK-Mem does not prescribe a retrieval score or candidate count. For each candidate pair, the host consolidation policy first indicates whether it would merge the records. DK-Mem then evaluates their distinction records. Compatible distinctions permit the proposed merge. Conflicting distinctions block it and leave both memories intact. Missing, ambiguous, or incomparable distinction information makes the pair underdetermined: the memories remain separate and the pair is marked unresolved. A host decision not to merge remains a keep-separate outcome. Approved updates return to the host memory store, which remains available to subsequent retrievals.
+
+\section{Algorithm}
+\label{app:algorithm}
+
+Algorithm~\ref{alg:dkmem-appendix} gives the pairwise decision path. \textsc{HostDecision} denotes the configured host policy, while \textsc{Compatibility} applies the distinction schema described above. The algorithm does not prescribe the host's retrieval implementation.
+
+\begin{algorithm}[t]
+\caption{DK-Mem Distinction-Aware Memory Consolidation}
+\label{alg:dkmem-appendix}
+\begin{algorithmic}[1]
+\Require User input $x$, memory store $M$, host merge policy $H$
+\Ensure Pairwise memory actions and updated store $M$
+\ForAll{fact $f$ extracted from $x$}
+    \State $s \gets$ original source-language span of $f$
+    \State $g \gets$ gloss of $f$
+    \State $d \gets \Call{LexiconLookup}{f}$
+    \If{$d = \bot$}
+        \State $d \gets \Call{LLMFallback}{f}$
+    \EndIf
+    \State $m \gets (g,d,s)$
+    \State $C \gets \Call{RetrieveCandidates}{M,m}$
+    \If{$C = \varnothing$}
+        \State store $m$ in $M$
+    \Else
+        \ForAll{candidate memory $m_j$ in $C$}
+            \If{$H(m,m_j)=0$}
+                \State retain $m$ separately in $M$
+                \State emit \textsc{KeepSeparate}$(m,m_j)$
+            \Else
+                \State $d_j \gets$ distinction field of $m_j$
+                \State $c \gets \Call{Compatibility}{d,d_j}$
+                \If{$c=\textsc{Compatible}$}
+                    \State apply the host merge to $m$ and $m_j$; update $M$
+                    \State emit \textsc{Merge}$(m,m_j)$
+                \ElsIf{$c=\textsc{Incompatible}$}
+                    \State retain both memories separately in $M$
+                    \State emit \textsc{KeepSeparate}$(m,m_j)$
+                \Else
+                    \State retain both memories separately in $M$ and mark the pair unresolved
+                    \State emit \textsc{Unresolved}$(m,m_j)$
+                \EndIf
+            \EndIf
+        \EndFor
+    \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+\FloatBarrier
+
+\section{Mathematical Formulation}
+\label{app:formulation}
+
+Let $f_i$ denote an extracted fact. Its stored memory record is
+\begin{equation}
+    m_i = (g_i,d_i,s_i),
+    \label{app:eq:memory}
+\end{equation}
+where $g_i$ is its gloss, $d_i$ is its extracted distinction (or $\bot$ when unavailable), and $s_i$ is the preserved source-language surface text. The three fields keep normalized content, identity-relevant information, and original wording available to later stages.
+
+Let $L(f_i)$ return a recognized lexicon entry or $\bot$, and let $Q(f_i)$ be the LLM fallback output, which may also be $\bot$ if it cannot identify a supported distinction. The lexicon-first extraction rule is
+\begin{equation}
+    d_i =
+    \begin{cases}
+        L(f_i), & L(f_i) \ne \bot,\\
+        Q(f_i), & L(f_i) = \bot.
+    \end{cases}
+    \label{app:eq:distinction}
+\end{equation}
+Thus, the fallback is used only when the lexicon has no recognized entry; neither path requires inventing a distinction when evidence is unavailable.
+
+For a candidate pair $(m_i,m_j)$ returned by the host retriever, let the host merge decision be
+\begin{equation}
+    H(m_i,m_j) \in \{0,1\},
+    \label{app:eq:host}
+\end{equation}
+where $1$ means the configured host policy proposes consolidation and $0$ means it does not. In the embedding-threshold configuration, the host decision is
+\begin{equation}
+    H_{\tau}(m_i,m_j) = \mathbf{1}\!\left[\operatorname{sim}(m_i,m_j)>\tau\right],
+    \label{app:eq:threshold}
+\end{equation}
+where $\operatorname{sim}$ is the similarity score produced by the configured embedding component, $\tau$ is the tested threshold, and $\mathbf{1}[\cdot]$ is one when its condition holds and zero otherwise. This expression specifies the threshold decision without fixing a similarity function or value of $\tau$.
+
+Let $K_{ij}=1$ when the distinction schema can compare $d_i$ and $d_j$, and let $X_{ij}=1$ when the records encode conflicting values. The compatibility function is
+\begin{equation}
+    C(d_i,d_j) =
+    \begin{cases}
+        \Inc, & X_{ij}=1,\\
+        \Comp, & X_{ij}=0 \land K_{ij}=1,\\
+        \Und, & \text{otherwise}.
+    \end{cases}
+    \label{app:eq:compatibility}
+\end{equation}
+Thus, $\Inc$ blocks consolidation, $\Comp$ permits a host-proposed merge, and $\Und$ denotes missing, ambiguous, or incomparable evidence. The final decision combines this gate with the host proposal:
+\begin{equation}
+    D(m_i,m_j) =
+    \begin{cases}
+        \textsc{Merge}, & \substack{H(m_i,m_j)=1\\ C(d_i,d_j)=\Comp},\\
+        \textsc{Unresolved}, & \substack{H(m_i,m_j)=1\\ C(d_i,d_j)=\Und},\\
+        \textsc{KeepSeparate}, & \text{otherwise}.
+    \end{cases}
+    \label{app:eq:decision}
+\end{equation}
+An unresolved pair is not merged; an incompatible pair is kept separate even when the host proposes consolidation.
+
+For evaluation, let $P_{\ne}$ be the human-validated set of distinct-entity pairs and $P_{=}$ the set of same-entity pairs. Let $z_{ij}=1$ when the final system action consolidates a pair, including by merging, overwriting, or treating one fact as superseding the other; otherwise $z_{ij}=0$. The two primary error rates are
+\begin{align}
+    \mathrm{FCR} &= \frac{\sum_{(i,j)\in P_{\ne}} z_{ij}}{|P_{\ne}|},
+    \label{app:eq:fcr}\\
+    \mathrm{MCR} &= \frac{\sum_{(i,j)\in P_=} (1-z_{ij})}{|P_=|}.
+    \label{app:eq:mcr}
+\end{align}
+FCR is the fraction of distinct-entity pairs incorrectly consolidated; MCR is the fraction of same-entity pairs not consolidated. An unresolved outcome has $z_{ij}=0$, so it avoids counting as a false consolidation but contributes to MCR for a same-entity pair.
+
+For thresholds in the tested set $\mathcal{T}$, define $\tau' \prec \tau$ to mean that $\tau'$ is no worse on both rates and strictly better on at least one:
+\begin{equation}
+\begin{aligned}
+    \tau' \prec \tau \;\Longleftrightarrow\;&
+    \mathrm{FCR}(\tau') \le \mathrm{FCR}(\tau),\\
+    &\mathrm{MCR}(\tau') \le \mathrm{MCR}(\tau),\\
+    &\text{with at least one inequality strict}.
+\end{aligned}
+    \label{app:eq:dominance}
+\end{equation}
+The nondominated FCR--MCR points form the threshold frontier:
+\begin{equation}
+\begin{aligned}
+    \mathcal{F} = \{(\mathrm{FCR}(\tau),\mathrm{MCR}(\tau)) :\quad
+        &\tau\in\mathcal{T},\\
+        &\nexists\tau'\in\mathcal{T}:\tau'\prec\tau\}.
+\end{aligned}
+    \label{app:eq:frontier}
+\end{equation}
+Here, $\mathcal{T}$ is the set of thresholds actually evaluated. The frontier compares the error rates without presuming a preferred threshold or experimental outcome.
+
+\end{document}

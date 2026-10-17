@@ -4,17 +4,45 @@
 \section{Introduction}
 \label{sec:intro}
 
-\todo{P4: motivation -- assistants consolidate memories; similarity/LLM judges conflate look-alike mentions. Concrete example in Hindi with
-\dev{दादी} / \dev{नानी} (dadi/nani) and a register example (tum/aap).}
+Assistants that serve the same user over weeks need a memory that outlives a single context window. Systems such as
+Mem0~\citep{chhikara2025mem0} and A-MEM~\citep{xu2025amem} extract facts from each turn and consolidate them against what is already
+stored: a new fact is added, treated as an update to an older one, or dropped as a duplicate. Consolidation is therefore an identity
+decision. When the system wrongly concludes that two facts describe the same thing, the older fact is merged away or superseded, and no
+later retrieval can recover it. Recent work evaluates or guards this write path~\citep{chen2025halumem,zhao2026mosaic}; it does not ask
+whether the evidence that two mentions are \emph{different} survives long enough to reach the merge decision.
 
-\todo{P4: why Indic languages make this specific -- kinship terms encode side of family and generation; second-person register;
-script variation (Roman vs Devanagari/Gujarati) for the same name; code-mixing.}
+In Indic languages that evidence is often a single word. Hindi distinguishes the paternal grandmother \dev{दादी} (\emph{dadi}) from the
+maternal grandmother \dev{नानी} (\emph{nani}); English has one word for both. A user who says that their \dev{दादी} lives in Pune in one
+session and their \dev{नानी} in Delhi in another has described two people, yet a judge or an embedding that reduces both mentions to ``my
+grandmother lives in $X$'' can read the second as a relocation and overwrite the first. Register works the same way: \emph{tum} and
+\emph{aap} can address one person at two moments or two different people, and under our labelling conventions the vocative decides which.
+We call a merge of two different people \emph{false consolidation} and the failure to merge two mentions of one person \emph{missed
+consolidation}. False consolidation is a memory-integrity failure, not a translation failure: a true fact is destroyed. We are not aware of
+earlier work that isolates it for source-language distinctions.
 
-\todo{P4: the idea -- a cheap deterministic cannot-link gate over write-side distinction features, placed in front of ANY host
-(LLM judge or embedding threshold); veto-only, never creates a merge.}
+Indic input makes this specific. Kinship terms encode the side of the family and the generation; second-person forms mark register as well
+as person; one name appears in Roman, Devanagari and Gujarati script; and code-mixed text such as Hinglish combines all three. Because the
+sentence frame is shared and only one word differs, an embedding similarity or an LLM identity judge can treat such mentions as
+near-duplicates.
 
-\paragraph{Contributions.} \todo{P4: keep to these four, in this order}
-(1) a controlled multi-session injection benchmark for false and missed consolidation with explicit labelling conventions;
-(2) DK-Mem, a veto-only compatibility gate;
-(3) a preliminary Hindi study of an LLM-judge host and an embedding-threshold host, with and without the gate;
-(4) an evaluation-integrity methodology (independent judge-log and embedder verification) and the failure case that motivated it.
+We propose DK-Mem, a cheap deterministic gate placed in front of whatever merge mechanism the host uses, an LLM judge or an embedding
+threshold. It extracts distinction features from the user's own words with a small lexicon and compares them at merge time: if two entries
+disagree on a feature that discriminates identity it vetoes the merge, and if only one side carries the feature it blocks the merge and
+marks the pair unresolved. The gate only vetoes and never creates a merge, so it cannot raise the host's false consolidation rate; its cost
+is the merges it wrongly blocks. The constraint is not new: it is the attribute-agreement test of deterministic coreference
+resolution~\citep{raghunathan2010sieve,lee2013deterministic} and the cannot-link constraint of constrained
+clustering~\citep{wagstaff2001constrained}. What is specific here is the source of the attribute, a distinction the pipeline itself may
+erase, and the setting, agent memory. On the Hindi pairs of our benchmark an LLM identity judge falsely merged \MainCoffHiFCR{}
+gold-different pairs; with the gate it merged \MainClexHiFCR{}, while missed merges rose from \MainCoffHiMCR{} to \MainClexHiMCR{} (single
+seed, development data; Section~\ref{sec:results}).
+
+\paragraph{Contributions.}
+(1) A controlled multi-session injection benchmark for false and missed consolidation with explicit labelling conventions
+(Section~\ref{sec:benchmark}).
+(2) DK-Mem, a veto-only compatibility gate (Section~\ref{sec:method}).
+(3) A preliminary Hindi study of an LLM-judge host and an embedding-threshold host, with and without the gate
+(Section~\ref{sec:results}).
+(4) An evaluation-integrity methodology, independent verification of judge logs and of the embedder, with the failure case that motivated
+it (Appendix~\ref{app:repro}).
+The results are single-seed, development-set and Hindi-only; the Marathi and Gujarati extension was reviewed in-team and not evaluated
+(Section~\ref{sec:limits}).

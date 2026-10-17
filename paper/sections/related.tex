@@ -3,13 +3,31 @@
 \section{Related Work}
 \label{sec:related}
 
-\paragraph{Long-term memory for LLM agents.} \todo{P4: Mem0 \citep{chhikara2025mem0}, A-MEM \citep{xu2025amem}; how they consolidate
-(LLM-decided add/update/merge) and why that can conflate entities.}
+\paragraph{Long-term memory for LLM agents.} Mem0 extracts salient facts from conversation, consolidates them against stored memories with
+an LLM that chooses among operations, and retrieves them later~\citep{chhikara2025mem0}. A-MEM instead stores linked, structured notes, and
+adding a note can update the attributes or context of existing ones~\citep{xu2025amem}. In both designs an LLM-mediated decision determines
+whether a new fact is treated as the same as an old one, and a wrong identity decision can overwrite a true fact. HaluMem scores memory
+extraction, updating and question answering as separate operations~\citep{chen2025halumem}, which is the kind of operation-level view this
+paper adopts for the consolidation step. MOSAIC checks new entries against their neighbours in an entity-typed graph at save
+time~\citep{zhao2026mosaic}; its conflict checks concern contradictory values, not two entries that differ only in a source-language word.
+Hindsight keeps the source language by default, but when one observation merges facts written in several languages the majority language
+wins, and the documentation calls language handling prompt-level guidance rather than a guarantee~\citep{vectorize2026hindsight}. Retaining
+the surface text is therefore not the same as using the distinction when the merge is decided.
 
-\paragraph{Entity resolution and coreference across sessions.} \todo{P4: cannot-link constraints in clustering / entity resolution; cross-document
-coreference. Position DK-Mem as a cannot-link constraint on memory writes.}
+\paragraph{Entity resolution and coreference across sessions.} Deterministic coreference systems apply attribute-agreement tests, such as
+number, gender and animacy, to rule out mentions that cannot corefer~\citep{raghunathan2010sieve,lee2013deterministic}, and constrained
+clustering uses cannot-link constraints to keep given pairs apart~\citep{wagstaff2001constrained}. DK-Mem uses the same kind of constraint as
+a veto on memory writes. We do not claim the mechanism as new; the contribution is the attribute it tests, a source-language distinction that
+the pipeline may erase, in the setting of agent memory.
 
-\paragraph{Multilingual embeddings and Indic NLP.} \todo{P4: bge-m3 \citep{chen2024bgem3} as the similarity host; Indic kinship and honorific
-systems; code-mixing (Hinglish).}
+\paragraph{Multilingual embeddings and Indic NLP.} We use bge-m3~\citep{chen2024bgem3} as the similarity host for the embedding-threshold
+configuration. Kinbank is a cross-linguistic database of kinship terminology~\citep{passmore2023kinbank}; it documents the kind of
+distinction that a language lexicalizes and English does not, and could inform the coverage of a future lexicon, but our current Hindi
+lexicon is a small hand-curated list (Section~\ref{sec:method}). Code-mixed input is a recognised difficulty for NLP systems, and GLUECoS
+evaluates models on code-switched tasks~\citep{khanuja2020gluecos}; our benchmark is not a code-mixing benchmark, but its sentences include
+Roman-script and mixed-script variants of the same names and terms.
 
-\paragraph{LLM-as-judge reliability.} \todo{P4: judge prompt sensitivity, position bias; our prompt-identity failure (Sec.~\ref{app:repro}).}
+\paragraph{LLM-as-judge reliability.} LLM judges are known to be sensitive to the position of the candidates they compare, among other
+biases~\citep{zheng2023judging,wang2023fair}. The merge decision in our Config~C is an LLM judgement, so we treat the judge as a component to
+be verified and not as ground truth. In our own pipeline a judge was silently replaced by one that reused the frozen prompt's identifier with
+a different prompt; Appendix~\ref{app:repro} describes the failure and the content-hash check that now guards against it.

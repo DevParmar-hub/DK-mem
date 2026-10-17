@@ -4,16 +4,25 @@
 \section{Limitations and Ethics}
 \label{sec:limits}
 
-\paragraph{Scale and seeds.} One seed with greedy decoding; 36 Hindi gold-different and 27 gold-same pairs; wide intervals.
-\todo{P4: state that greedy decoding makes reruns identical, so uncertainty here is over pairs, not sampling.}
+\paragraph{Scale and seeds.} One seed with greedy decoding; 36 Hindi gold-different and 27 gold-same pairs; wide intervals. Greedy decoding
+makes reruns identical, so extra seeds would add nothing and the uncertainty we report is over pairs (Wilson intervals, bootstrap), not over
+sampling. Tier~1 (3B backbone, provisional LLM-annotated labels) and Tier~2 (7B judge) are separate experiments and are never pooled. The
+threshold $\tau=0.90$ is a pilot value, not a selected operating point, and nothing here shows that the judge is a good choice of judge.
 
-\paragraph{No held-out test set.} \todo{P4: all numbers are development results; the planned independent test set (Sec.~\ref{app:repro})
-is not built yet.}
+\paragraph{No held-out test set.} All numbers are development results. The Team~B test labels were exposed during verification, and the
+24-item Hindi reserve set is not blind: 8 of its 24 items resemble exposed items (Appendix~\ref{app:repro}). The independent test set we plan
+has not been built.
 
-\paragraph{Constructed data and conventions.} \todo{P4: templated sentences; labelling conventions; the v1 kinship city/weekday confound.}
+\paragraph{Constructed data and conventions.} The sentences are templated and constructed, not collected from users, so we make no claim
+about how often the failure occurs in natural use. Labels follow four stated conventions, and some are contestable: that a register shift
+with the same vocative is one person, and that German du/Sie marks two addressees. The first-version kinship pairs also differ in city or
+weekday, a confound that the mirror arm (Section~\ref{sec:benchmark}) was built to counter. Class and relation are confounded: kinship pairs are all gold-different and
+Hindi register pairs are all gold-same, so a class effect cannot be separated from a relation effect. All 27 gold-same pairs are register or
+name variants, so the gate's cost on same-entity \emph{kinship} pairs is untested.
 
-\paragraph{Languages.} \todo{P4: results are Hindi-only; Marathi/Gujarati items exist with in-team review but were not evaluated; the
-judge's behaviour in those languages is unvalidated.}
+\paragraph{Languages.} Results are Hindi-only (the German pairs appear only in the ``all'' rows). The Marathi and Gujarati items exist and were
+reviewed in-team by co-authors who had seen the labels, so that review is not independent. These items were not evaluated, and the judge's
+behaviour in those languages is unvalidated.
 
 \paragraph{Lexicon and Marathi review.} The v1 lexicon has 15 Hindi entries and is context-free, so it can mis-tag a word used outside its intended sense:
 the Hindi reflexive \emph{apne aap} is tagged as the polite pronoun \emph{aap} (no frozen benchmark text contains this phrase). The same limitation applies more broadly
@@ -23,18 +32,9 @@ We did not run the Marathi or Gujarati items, so we make no claim about performa
 received an in-team review in which the annotations were drafted by an AI assistant rather than by a native speaker; this is neither independent nor full native validation, and the 30 distractor turns have only this limited check.
 Repaired items and uncertain labels (for example, kinship same-pairs that rely on an unstated single-relative assumption) need native-speaker confirmation before any future benchmark release.
 
-\paragraph{Ethics.} \todo{P4: no personal data; constructed sentences; kinship-based assumptions; risk of encoding normative family
-structures.}
-
-% P2 (Hindi native): appended paragraph. Verdict counts come from the generated \ReviewHiPairs... macros; the awkward (14) and class (4)
-% counts are copied by hand from paper/review/hi_pairs_review.csv because no generated macro exists for those columns.
-\paragraph{Hindi data.} The Hindi pairs are templated, constructed sentences and do not reflect real-world frequencies. The 32 kinship
-pairs, all gold-different, also differ in city or weekday, so the attribute alone can separate them. Other labels rest on conventions that
-real Hindi usage need not follow: a shared name means one person, although two people can share a name; a \emph{tum}/\emph{aap} or
-\emph{tu}/\emph{tum} shift with the same vocative means one addressee, although such switches read as awkward in several pairs and the
-turns address the relative directly; and ``school wali'' and ``gym wali'' Neha are two people, although one person can be both and the
-source pair may describe two events involving one person. A
-co-author reviewed all \ReviewHiPairsTotal{} pairs against these conventions with the gold labels visible, so the review is neither
-independent nor blind: \ReviewHiPairsCorrect{} correct, \ReviewHiPairsAmbiguous{} ambiguous (\emph{tu}/\emph{tum}),
-\ReviewHiPairsWrong{} wrong, 14 awkward (mostly formal weekday names) and four qualifier pairs misclassified as \emph{name\_variant}.
-Independent, blind native-speaker review is still needed.
+\paragraph{Ethics.} The benchmark contains no personal data; every sentence is constructed. A kinship lexicon nevertheless encodes particular
+family structures, such as separate terms for paternal and maternal relatives, and treats them as identity-bearing, which can embed a normative
+view of the family. Kinship words are also used for people who are not relatives (a Gujarati \emph{kaka} may address any older man), so a gate
+can veto a correct merge or, if misconfigured, ignore a real distinction. The two error types are not symmetric: a wrongly vetoed merge keeps
+two records apart and can be repaired later, while a wrong merge destroys a fact. A deployed system should expose vetoed and unresolved pairs
+to the user instead of resolving them silently.
