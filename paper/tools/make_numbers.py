@@ -7,8 +7,10 @@ Input: eval/tier2_entity_runs/TIER2_FULL_entity_report_v1.json (sha256 pinned be
 That file holds per-pair gold labels and is gitignored, so only the lead (who holds the artifacts) runs this; the OUTPUTS are aggregates
 with no per-pair labels and are committed, so everyone can build the PDF.
 
-Optional: --exclude paper/review/exclusions.txt (injected pair ids flagged wrong/ambiguous by the in-team native review) adds a
-sensitivity table computed without those pairs. The primary numbers never change because of it.
+Exclusions: paper/review/exclusions.txt (injected pair ids flagged wrong/ambiguous by the review, written by summarize_reviews.py) is read
+BY DEFAULT when it exists, for writing and for --check alike, so the committed outputs always match the committed exclusion list. It adds a
+sensitivity table computed without those pairs; the primary numbers never change because of it. --exclude FILE uses another list,
+--no-exclude ignores it.
 """
 from __future__ import annotations
 
@@ -132,18 +134,26 @@ def render(nums: dict) -> dict[str, str]:
             "numbers.json": json.dumps(nums, indent=1, ensure_ascii=False, sort_keys=True) + "\n"}
 
 
+EXCLUSIONS = Path(__file__).resolve().parents[2] / "paper" / "review" / "exclusions.txt"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--report", type=Path, default=REPORT)
-    ap.add_argument("--exclude", type=Path, default=None, help="file of injected pair ids (one per line, # comments)")
+    ap.add_argument("--exclude", type=Path, default=None,
+                    help="file of injected pair ids (one per line, # comments); default paper/review/exclusions.txt when it exists")
+    ap.add_argument("--no-exclude", action="store_true", help="ignore the exclusion list (no sensitivity table)")
     ap.add_argument("--check", action="store_true", help="do not write; exit 1 if paper/generated differs")
     a = ap.parse_args(argv)
     raw = a.report.read_bytes()
     if hashlib.sha256(raw).hexdigest() != REPORT_SHA256:
         raise SystemExit(f"{a.report} is not the verified report (sha256 mismatch): regenerate it with tier2.entity_report_verified")
+    if a.no_exclude and a.exclude:
+        ap.error("--exclude and --no-exclude are exclusive")
+    excl_file = None if a.no_exclude else (a.exclude or (EXCLUSIONS if EXCLUSIONS.exists() else None))
     exclude = set()
-    if a.exclude:
-        exclude = {l.split("#")[0].strip() for l in a.exclude.read_text(encoding="utf-8").splitlines()} - {""}
+    if excl_file:
+        exclude = {l.split("#")[0].strip() for l in excl_file.read_text(encoding="utf-8").splitlines()} - {""}
     files = render(build(json.loads(raw), exclude))
     if a.check:
         stale = [n for n, t in files.items() if not (OUT / n).exists() or (OUT / n).read_text(encoding="utf-8") != t]

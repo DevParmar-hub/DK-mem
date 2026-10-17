@@ -193,9 +193,9 @@ def describe(manifest: dict, judge_log: list[dict]) -> dict:
 
 
 def validate_run_verified(run_dir, *args, **kwargs) -> dict:
-    """``contract.validate_run`` followed by ``augment_report`` (see there)."""
-    from . import contract       # lazy: contract is pinned and must not import this module
-    return augment_report(contract.validate_run(run_dir, *args, **kwargs), run_dir)
+    """``contract_v2.validate_run`` (all four configs) followed by ``augment_report`` (see there)."""
+    from . import contract_v2    # lazy; contract_v2 equals the pinned contract for configs C and D (tested) and also accepts A and B
+    return augment_report(contract_v2.validate_run(run_dir, *args, **kwargs), run_dir)
 
 
 def augment_report(report: dict, run_dir) -> dict:
@@ -220,7 +220,7 @@ def augment_report(report: dict, run_dir) -> dict:
                                  "message": f"manifest records embedder revision {emb['recorded']!r} (requested {emb['requested']!r}, model "
                                             f"{emb['model_id']!r}); the registered bge-m3 revision is {emb['expected']!r}"})
         report["ok"] = not report["errors"]
-    if report.get("pipeline_config") != "C":
+    if report.get("pipeline_config") not in ("A", "B", "C"):       # the configs whose host is an LLM judge
         return report
     log_path = run_dir.parent / f"{run_dir.name}.judge_log.jsonl"
     rows = [json.loads(l) for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()] if log_path.exists() else []

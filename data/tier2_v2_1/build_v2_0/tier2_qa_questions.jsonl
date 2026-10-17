@@ -1,0 +1,194 @@
+{"qa_id": "t2q_0001_ab", "conversation_id": "t2c_0001", "question": "Amit kahan rehta hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0002_ab", "conversation_id": "t2c_0002", "question": "Kisne Nagpur mein gift diya?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0003_a", "conversation_id": "t2c_0003", "question": "Saheb kuthe yenar?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0003_b", "conversation_id": "t2c_0003", "question": "Ravi kuthe yenar?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0004_a", "conversation_id": "t2c_0004", "question": "Meri chachi kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0004_b", "conversation_id": "t2c_0004", "question": "Meri bua kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0005_a", "conversation_id": "t2c_0005", "question": "Meri bua kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0005_b", "conversation_id": "t2c_0005", "question": "Meri mami kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0006_ab", "conversation_id": "t2c_0006", "question": "Ba kyan kyan aavse?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0007_ab", "conversation_id": "t2c_0007", "question": "Neha kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0008_ab", "conversation_id": "t2c_0008", "question": "Arjun kahan rehta hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0009_a", "conversation_id": "t2c_0009", "question": "Office wale Rahul ki city kaunsi hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0009_b", "conversation_id": "t2c_0009", "question": "College wale Rahul ki city kaunsi hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0010_ab", "conversation_id": "t2c_0010", "question": "Priya kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0011_a", "conversation_id": "t2c_0011", "question": "Teacher wali Priya ka birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0011_b", "conversation_id": "t2c_0011", "question": "Doctor wali Priya ka birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0012_a", "conversation_id": "t2c_0012", "question": "Meri chachi kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0012_b", "conversation_id": "t2c_0012", "question": "Meri mausi kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0013_a", "conversation_id": "t2c_0013", "question": "Sharma sir kuthe yetil?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0013_b", "conversation_id": "t2c_0013", "question": "Rahul kuthe yeil?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0014_ab", "conversation_id": "t2c_0014", "question": "Baba kuthe kuthe gele?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0015_a", "conversation_id": "t2c_0015", "question": "Meri dadi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0015_b", "conversation_id": "t2c_0015", "question": "Meri nani ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0016_a", "conversation_id": "t2c_0016", "question": "Meri chachi kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0016_b", "conversation_id": "t2c_0016", "question": "Meri mausi kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0017_a", "conversation_id": "t2c_0017", "question": "Meri bua ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0017_b", "conversation_id": "t2c_0017", "question": "Meri mami ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0018_ab", "conversation_id": "t2c_0018", "question": "Pooja kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0019_a", "conversation_id": "t2c_0019", "question": "Meri bua kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0019_b", "conversation_id": "t2c_0019", "question": "Meri mami kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0020_a", "conversation_id": "t2c_0020", "question": "Mavshi kuthe geli?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0020_b", "conversation_id": "t2c_0020", "question": "Mami kuthe geli?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0021_a", "conversation_id": "t2c_0021", "question": "Joshi madam la kay hava aahe?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0021_b", "conversation_id": "t2c_0021", "question": "Seema tai la kay hava aahe?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0022_a", "conversation_id": "t2c_0022", "question": "Mishra ji ko kahan jaana hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0022_b", "conversation_id": "t2c_0022", "question": "Chhotu ko kahan jaana hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0023_a", "conversation_id": "t2c_0023", "question": "Meri mami ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0023_b", "conversation_id": "t2c_0023", "question": "Meri mausi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0024_a", "conversation_id": "t2c_0024", "question": "Maasi kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0024_b", "conversation_id": "t2c_0024", "question": "Mami kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0025_ab", "conversation_id": "t2c_0025", "question": "Ramesh dada shu shu karse?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0026_ab", "conversation_id": "t2c_0026", "question": "Anjali kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0027_ab", "conversation_id": "t2c_0027", "question": "Maa kahan se aa rahi hain aur kis din ghar aayengi?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0028_a", "conversation_id": "t2c_0028", "question": "Meri bua kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0028_b", "conversation_id": "t2c_0028", "question": "Meri mami kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0029_a", "conversation_id": "t2c_0029", "question": "Meri dadi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0029_b", "conversation_id": "t2c_0029", "question": "Meri nani ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0030_ab", "conversation_id": "t2c_0030", "question": "Maa kahan rehti hain aur kis din phone karengi?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0031_a", "conversation_id": "t2c_0031", "question": "Kaka kya gaya che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0031_b", "conversation_id": "t2c_0031", "question": "Mama kya gaya che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0032_ab", "conversation_id": "t2c_0032", "question": "Vikram kahan rehta hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0033_a", "conversation_id": "t2c_0033", "question": "Teacher e shu check karyu?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0033_b", "conversation_id": "t2c_0033", "question": "Dost e shu check karyu?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0034_a", "conversation_id": "t2c_0034", "question": "Meri mami kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0034_b", "conversation_id": "t2c_0034", "question": "Meri mausi kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0035_a", "conversation_id": "t2c_0035", "question": "Meri dadi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0035_b", "conversation_id": "t2c_0035", "question": "Meri nani kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0036_ab", "conversation_id": "t2c_0036", "question": "Papa kahan se wapas aa rahe hain aur kis din khana khayenge?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0037_ab", "conversation_id": "t2c_0037", "question": "Nani kahan se aa rahi hain aur kab pahunchegi?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0038_a", "conversation_id": "t2c_0038", "question": "Neighbour Hetal kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0038_b", "conversation_id": "t2c_0038", "question": "Colleague Hetal kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0039_a", "conversation_id": "t2c_0039", "question": "Sheth kyan aavse?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0039_b", "conversation_id": "t2c_0039", "question": "Bhai kyan aavse?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0040_a", "conversation_id": "t2c_0040", "question": "Daadi kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0040_b", "conversation_id": "t2c_0040", "question": "Naani kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0041_ab", "conversation_id": "t2c_0041", "question": "Pooja kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0042_ab", "conversation_id": "t2c_0042", "question": "Daadi kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0043_ab", "conversation_id": "t2c_0043", "question": "Kamla ji, yaani dadi, kahan rehti hain aur unka birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0044_ab", "conversation_id": "t2c_0044", "question": "Anjali kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0045_a", "conversation_id": "t2c_0045", "question": "Meri bua kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0045_b", "conversation_id": "t2c_0045", "question": "Meri mami kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0046_a", "conversation_id": "t2c_0046", "question": "Meri chachi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0046_b", "conversation_id": "t2c_0046", "question": "Meri mausi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0047_a", "conversation_id": "t2c_0047", "question": "school wali Neha kahan rehti hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0047_b", "conversation_id": "t2c_0047", "question": "gym wali Neha kahan rehti hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0048_ab", "conversation_id": "t2c_0048", "question": "Rohan bhaiya kahan se aa rahe hain aur kab pahunchenge?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0049_a", "conversation_id": "t2c_0049", "question": "Aatya kuthe rahte?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0049_b", "conversation_id": "t2c_0049", "question": "Kaaku kuthe rahte?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0050_a", "conversation_id": "t2c_0050", "question": "Kaki kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0050_b", "conversation_id": "t2c_0050", "question": "Maasi kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0051_ab", "conversation_id": "t2c_0051", "question": "Maa ne kahan khana khaya aur kis din?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0052_ab", "conversation_id": "t2c_0052", "question": "Mavshi kuthe rahte?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0053_ab", "conversation_id": "t2c_0053", "question": "Manisha kuthe rahte?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0054_ab", "conversation_id": "t2c_0054", "question": "Kone phone karyo?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0055_ab", "conversation_id": "t2c_0055", "question": "Neha kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0056_a", "conversation_id": "t2c_0056", "question": "Meri dadi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0056_b", "conversation_id": "t2c_0056", "question": "Meri nani kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0057_ab", "conversation_id": "t2c_0057", "question": "Maasi kya thi aavi?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0058_a", "conversation_id": "t2c_0058", "question": "Principal sahab kahan aayenge?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0058_b", "conversation_id": "t2c_0058", "question": "Bhai kahan aayega?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0059_a", "conversation_id": "t2c_0059", "question": "Meri dadi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0059_b", "conversation_id": "t2c_0059", "question": "Meri nani ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0060_a", "conversation_id": "t2c_0060", "question": "Delhi wale Amit ka phone kis din aaya?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0060_b", "conversation_id": "t2c_0060", "question": "Mumbai wale Amit ka phone kis din aaya?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0061_ab", "conversation_id": "t2c_0061", "question": "Aaji kuthe kuthe aahe?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0062_a", "conversation_id": "t2c_0062", "question": "Meri bua ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0062_b", "conversation_id": "t2c_0062", "question": "Meri mami ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0063_ab", "conversation_id": "t2c_0063", "question": "Hetal kya thi aavi?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0064_a", "conversation_id": "t2c_0064", "question": "Aatya kuthe geli hoti?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0064_b", "conversation_id": "t2c_0064", "question": "Mami kuthe geli hoti?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0065_a", "conversation_id": "t2c_0065", "question": "Verma madam kahan se aayi?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0065_b", "conversation_id": "t2c_0065", "question": "Suman didi kahan se aayi?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0066_a", "conversation_id": "t2c_0066", "question": "Neighbour Neha kahan se aayi hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0066_b", "conversation_id": "t2c_0066", "question": "Colleague Neha kahan se aayi hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0067_ab", "conversation_id": "t2c_0067", "question": "Rahul kahan rehta hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0068_a", "conversation_id": "t2c_0068", "question": "Gupta ji ki meeting kis din hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0068_b", "conversation_id": "t2c_0068", "question": "Rohan ki meeting kis din hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0069_a", "conversation_id": "t2c_0069", "question": "Sharma uncle kahan ja rahe hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0069_b", "conversation_id": "t2c_0069", "question": "Rahul kahan ja raha hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0070_a", "conversation_id": "t2c_0070", "question": "Kaka kuthe gele?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0070_b", "conversation_id": "t2c_0070", "question": "Mama kuthe gele?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0071_a", "conversation_id": "t2c_0071", "question": "Meri chachi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0071_b", "conversation_id": "t2c_0071", "question": "Meri mausi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0072_a", "conversation_id": "t2c_0072", "question": "Doctor sahab ne kya dekha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0072_b", "conversation_id": "t2c_0072", "question": "Yaar ne kya dekha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0073_a", "conversation_id": "t2c_0073", "question": "Office no Ketan kya thi aavyo?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0073_b", "conversation_id": "t2c_0073", "question": "College no Ketan kya thi aavyo?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0074_ab", "conversation_id": "t2c_0074", "question": "Konni gift dila?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0075_a", "conversation_id": "t2c_0075", "question": "office wali Neha kahan rehti hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0075_b", "conversation_id": "t2c_0075", "question": "college wali Neha kahan rehti hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0076_ab", "conversation_id": "t2c_0076", "question": "Foi nu ghar kya che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0077_a", "conversation_id": "t2c_0077", "question": "Meri mami ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0077_b", "conversation_id": "t2c_0077", "question": "Meri mausi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0078_ab", "conversation_id": "t2c_0078", "question": "Pappa kyan kyan gaya hata?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0079_a", "conversation_id": "t2c_0079", "question": "school wali Priya kahan rehti hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0079_b", "conversation_id": "t2c_0079", "question": "gym wali Priya kahan rehti hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0080_a", "conversation_id": "t2c_0080", "question": "Office madhla Sachin kuthe gela?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0080_b", "conversation_id": "t2c_0080", "question": "College madhla Sachin kuthe gela?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0081_a", "conversation_id": "t2c_0081", "question": "office wali Priya kahan rehti hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0081_b", "conversation_id": "t2c_0081", "question": "college wali Priya kahan rehti hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0082_a", "conversation_id": "t2c_0082", "question": "Meri chachi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0082_b", "conversation_id": "t2c_0082", "question": "Meri bua kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0083_ab", "conversation_id": "t2c_0083", "question": "Neha kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0084_a", "conversation_id": "t2c_0084", "question": "Meri chachi kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0084_b", "conversation_id": "t2c_0084", "question": "Meri bua kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0085_a", "conversation_id": "t2c_0085", "question": "Kaaku kuthe rahte?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0085_b", "conversation_id": "t2c_0085", "question": "Mavshi kuthe rahte?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0086_ab", "conversation_id": "t2c_0086", "question": "Rekha mausi kahan rehti hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0087_ab", "conversation_id": "t2c_0087", "question": "Sachin kuthe gela?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0088_a", "conversation_id": "t2c_0088", "question": "Meri chachi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0088_b", "conversation_id": "t2c_0088", "question": "Meri bua ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0089_ab", "conversation_id": "t2c_0089", "question": "Rahul kahan rehta hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0090_ab", "conversation_id": "t2c_0090", "question": "Snehal kuthe aahe?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0091_a", "conversation_id": "t2c_0091", "question": "Meri chachi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0091_b", "conversation_id": "t2c_0091", "question": "Meri bua kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0092_a", "conversation_id": "t2c_0092", "question": "Meri dadi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0092_b", "conversation_id": "t2c_0092", "question": "Meri nani kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0093_a", "conversation_id": "t2c_0093", "question": "Meri chachi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0093_b", "conversation_id": "t2c_0093", "question": "Meri bua ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0094_ab", "conversation_id": "t2c_0094", "question": "Kavita mami kahan se aayi hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0095_ab", "conversation_id": "t2c_0095", "question": "Aai kuthe kuthe yenar?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0096_a", "conversation_id": "t2c_0096", "question": "Foi kya gai hati?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0096_b", "conversation_id": "t2c_0096", "question": "Mami kya gai hati?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0097_a", "conversation_id": "t2c_0097", "question": "Meri dadi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0097_b", "conversation_id": "t2c_0097", "question": "Meri nani kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0098_a", "conversation_id": "t2c_0098", "question": "Babanchi aai kuthe geli?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0098_b", "conversation_id": "t2c_0098", "question": "Aaichi aai kuthe geli?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0099_ab", "conversation_id": "t2c_0099", "question": "Dadi ne kis din phone kiya?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0100_a", "conversation_id": "t2c_0100", "question": "Meri chachi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0100_b", "conversation_id": "t2c_0100", "question": "Meri mausi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0101_a", "conversation_id": "t2c_0101", "question": "Neighbour Manisha kuthe rahte?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0101_b", "conversation_id": "t2c_0101", "question": "Colleague Manisha kuthe rahte?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0102_ab", "conversation_id": "t2c_0102", "question": "Arjun kahan rehta hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0103_ab", "conversation_id": "t2c_0103", "question": "Nisha kya che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0104_ab", "conversation_id": "t2c_0104", "question": "Anjali kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0105_ab", "conversation_id": "t2c_0105", "question": "Pooja kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0106_ab", "conversation_id": "t2c_0106", "question": "Nani ka ghar kahan hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0107_ab", "conversation_id": "t2c_0107", "question": "Priya kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0108_a", "conversation_id": "t2c_0108", "question": "Saheb ne shu joiye che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0108_b", "conversation_id": "t2c_0108", "question": "Yaar ne shu joiye che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0109_ab", "conversation_id": "t2c_0109", "question": "Vikas kaka kuthe kuthe aale?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0110_a", "conversation_id": "t2c_0110", "question": "Meri mami kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0110_b", "conversation_id": "t2c_0110", "question": "Meri mausi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0111_a", "conversation_id": "t2c_0111", "question": "Meri dadi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0111_b", "conversation_id": "t2c_0111", "question": "Meri nani kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0112_ab", "conversation_id": "t2c_0112", "question": "Papa kahan ja rahe hain aur kis din nikalenge?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0113_ab", "conversation_id": "t2c_0113", "question": "Kone gift aapyo?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0114_ab", "conversation_id": "t2c_0114", "question": "Geeta bua ka ghar kahan hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0115_ab", "conversation_id": "t2c_0115", "question": "Konachya kadun phone aala?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0116_ab", "conversation_id": "t2c_0116", "question": "Aaji kuthe geli?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0117_a", "conversation_id": "t2c_0117", "question": "Meri chachi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0117_b", "conversation_id": "t2c_0117", "question": "Meri mausi ka phone kis din aaya tha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0118_ab", "conversation_id": "t2c_0118", "question": "Priya kahan rehti hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0119_ab", "conversation_id": "t2c_0119", "question": "Ketan kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0120_ab", "conversation_id": "t2c_0120", "question": "Amit kahan rehta hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0121_a", "conversation_id": "t2c_0121", "question": "Foi kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0121_b", "conversation_id": "t2c_0121", "question": "Kaki kya rahe che?", "language": "gu", "ask_after_session_index": 6}
+{"qa_id": "t2q_0122_ab", "conversation_id": "t2c_0122", "question": "Konni phone kela?", "language": "mr", "ask_after_session_index": 6}
+{"qa_id": "t2q_0123_ab", "conversation_id": "t2c_0123", "question": "Vikram kahan rehta hai aur uska birthday kab hai?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0124_ab", "conversation_id": "t2c_0124", "question": "Papa ne kahan aur kis din mera result dekha?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0125_a", "conversation_id": "t2c_0125", "question": "Meri mami kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0125_b", "conversation_id": "t2c_0125", "question": "Meri mausi kahan rehti hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0126_a", "conversation_id": "t2c_0126", "question": "Meri mami kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}
+{"qa_id": "t2q_0126_b", "conversation_id": "t2c_0126", "question": "Meri mausi kahan aa rahi hain?", "language": "hi", "ask_after_session_index": 6}

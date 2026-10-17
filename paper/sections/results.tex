@@ -41,10 +41,20 @@ The cost is missed merges: MCR rises from \MainCoffHiMCR{} to \MainClexHiMCR{}. 
 when one side carries a kinship/register marker and the other does not).}
 
 \paragraph{The embedding host does not separate the relations.} At $\tau=0.90$ Config D merges no gold-same pair (MCR \MainDoffHiMCR{}).
-Its false merges (\MainDoffFCR{} over all pairs, \MainDoffHiFCR{} on Hindi) are all German. \todo{P1: explain the construction effect:
-gold-different pairs share a sentence frame and so have HIGHER cosine than gold-same pairs, which carry different facts; $\tau$ is a pilot
-value, not a selected operating point.}
+Its false merges (\MainDoffFCR{} over all pairs, \MainDoffHiFCR{} on Hindi) are all German. Figure~\ref{fig:dcos} shows why a single
+threshold cannot work well here: in the Main arm, gold-different pairs share a sentence frame and so have \emph{higher} cosine (median
+\MainDiffMedian{}, range \MainDiffMin{}--\MainDiffMax{}) than gold-same pairs, which carry different facts (median \MainSameMedian{},
+\MainSameMin{}--\MainSameMax{}); \MainDiffAboveTau{} gold-different pairs exceed 0.90. In the Mirror arm the relation reverses
+(gold-same median \MirrorSameMedian{} versus gold-different \MirrorDiffMedian{}). The ordering therefore follows how the benchmark
+varies the sentences, not the identity relation. The value $\tau=0.90$ is a pilot setting, not a selected operating point, and the
+figure selects none.
 
-\paragraph{Mirror arm.} \todo{P1: same pattern on the mirror arm (C off \MirrorCoffHiFCR{} -> on \MirrorClexHiFCR{}).}
+\begin{figure}[t]\centering
+\includegraphics[width=\linewidth]{figures/d_cosine.pdf}
+\caption{Raw bge-m3 cosine of the injected pair, by gold relation, per arm (Config D). Solid lines: medians. Dashed: pilot $\tau=0.90$.
+All 69 pairs of each arm are drawn.}\label{fig:dcos}
+\end{figure}
+
+\paragraph{Mirror arm.} \todo{P1: Config C on the mirror arm: false merges \MirrorCoffHiFCR{} (gate off) $\to$ \MirrorClexHiFCR{} (gate on), missed merges \MirrorCoffHiMCR{} $\to$ \MirrorClexHiMCR{}. The gate helps on both arms.}
 
 \paragraph{QA.} \todo{P1: QA accuracy \MainCoffQA{} (C off) vs \MainClexQA{} (C on); merging affects what the answerer retrieves.}

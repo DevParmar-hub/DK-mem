@@ -52,11 +52,21 @@ def main() -> int:
             problems.append(f"VENDORED FILE CHANGED: eval/{rel}")
     notes.append(f"vendored files: {len(v['files'])} checked")
 
+    lx = subprocess.run([sys.executable, str(REPO / "tools" / "build_lexicon_v2.py"), "--check"], capture_output=True, text=True)
+    if lx.returncode != 0:
+        problems.append("dkmem/memory/distinction_features_v2.json is STALE or invalid: run python tools/build_lexicon_v2.py ("
+                        + lx.stdout.strip() + lx.stderr.strip()[-200:] + ")")
+    else:
+        notes.append("draft lexicon v2: matches its sources")
+
     report = REPO / "eval" / "tier2_entity_runs" / "TIER2_FULL_entity_report_v1.json"
     if report.exists():
         r = subprocess.run([sys.executable, str(REPO / "paper" / "tools" / "make_numbers.py"), "--check"], capture_output=True, text=True)
         if r.returncode != 0:
             problems.append("paper/generated is STALE: run python paper/tools/make_numbers.py (" + r.stdout.strip() + r.stderr.strip()[-200:] + ")")
+        f = subprocess.run([sys.executable, str(REPO / "paper" / "tools" / "make_figures.py"), "--check"], capture_output=True, text=True)
+        if f.returncode != 0:
+            problems.append("paper/generated/figure_numbers.tex is STALE: run python paper/tools/make_figures.py (" + f.stdout.strip() + f.stderr.strip()[-200:] + ")")
         notes.append("paper numbers: checked against the verified report")
     else:
         notes.append("paper numbers: report absent locally, not checked (the lead checks this)")

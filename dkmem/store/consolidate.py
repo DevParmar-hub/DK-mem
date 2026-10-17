@@ -35,7 +35,7 @@ from dkmem.config import dkmem_gate_enabled, validate_dkmem_mode
 from dkmem.memory.dkmem_extract import resolve_distinction
 from dkmem.memory.extract import TextGenerator
 from dkmem.memory.gate import DEFAULT_DISCRIMINATIVE_FEATURES, MERGING_DECISIONS, apply_gate
-from dkmem.memory.judge import MERGE_JUDGE_V1, judge_pairs
+from dkmem.memory.judge import MERGE_JUDGE_V1, check_prompt_content, judge_pairs
 from dkmem.memory.lexicon import Lexicon
 from dkmem.memory.prompts import PromptTemplate
 from dkmem.memory.schema import Extraction
@@ -111,6 +111,7 @@ class JudgeHost:
         *,
         prompt: PromptTemplate = MERGE_JUDGE_V1,
     ) -> None:
+        check_prompt_content(prompt)
         self.generator, self.params, self.prompt = generator, params, prompt
 
     def propose(self, queries: Sequence[HostQuery]) -> list[HostProposal]:

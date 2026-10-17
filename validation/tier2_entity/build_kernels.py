@@ -11,7 +11,14 @@ Kinds (each writes ``<out>`` = only what ``kaggle kernels push -p <out>`` sees, 
 
     python build_kernels.py judge-validation --user U --slug S --out DIR
     python build_kernels.py tier2 --arm v1.0|mirror [--conversations ids|--smoke] --run-prefix P --user U --slug S --out DIR
+    python build_kernels.py tier2 --arm v2 [--arm-root eval/tier2/v2] [--configs full|A:off,C:lexicon,...] [--smoke] ...   # the v2 benchmark arm
     python build_kernels.py --check DIR          # freshness: the notebook still equals what the working tree builds
+
+The v2 arm (``eval/tier2/v2``, assembled and frozen by ``tier2.freeze_v2``) is built only from a FROZEN_v2.0.json that verifies: it carries the
+benchmark's conversations and questions, the FINAL lexicon (pinned, passed to the runner with ``--lexicon`` and checked in the kernel against the
+sha256 the runs record), and runs any list of configs A-D x off|lexicon (``--configs full`` = all eight). Configs A, B and C use the pinned 7B
+identity judge; A and B extract with the pinned 3B. The v2 acceptance cell asserts integrity (pinned prompts, models, embedder revision, lexicon);
+parse and extraction failure counts are recorded as observations, not asserted.
 
 Nothing is pushed by this script.
 """
@@ -58,9 +65,20 @@ JV_FORBIDDEN_NAME_PARTS = ("cases_v1", "criteria_v1", "cases_v2", "criteria_v2",
                            "score_7b", "make_cases")
 JV_LABEL_FIELDS = ("expected", "category", "role", "attribute_pattern", "contested", "note")
 
+def v2_arm(root: str) -> dict:
+    """The layout ``tier2.freeze_v2`` writes: ``<root>/{data/, lexicon/, FROZEN_v2.0.json}``. The root must live under eval/ (payload paths)."""
+    root = root.strip("/")
+    if not root.startswith("eval/") or ".." in root.split("/"):
+        raise BuildError(f"a v2 arm root must be a path under eval/ (payload files live under dkmem/, eval/ and inputs/), got {root!r}")
+    return {"root": root, "frozen": f"{root}/FROZEN_v2.0.json", "data": f"{root}/data", "lexicon": f"{root}/lexicon/distinction_features.json",
+            "smoke_plan": "v2"}
+
+
 ARMS = {
-    "v1.0": {"root": "eval/tier2", "frozen": "eval/tier2/FROZEN_v1.0.json", "data": "eval/tier2/data"},
-    "mirror": {"root": "eval/tier2/mirror_v1_1", "frozen": "eval/tier2/mirror_v1_1/FROZEN_v1.1m.json", "data": "eval/tier2/mirror_v1_1/data"},
+    "v1.0": {"root": "eval/tier2", "frozen": "eval/tier2/FROZEN_v1.0.json", "data": "eval/tier2/data", "smoke_plan": "v1"},
+    "mirror": {"root": "eval/tier2/mirror_v1_1", "frozen": "eval/tier2/mirror_v1_1/FROZEN_v1.1m.json", "data": "eval/tier2/mirror_v1_1/data",
+               "smoke_plan": "v1"},
+    "v2": v2_arm("eval/tier2/v2"),
 }
 TIER2_SYSTEM_FILES = S.SYSTEM_FILES      # includes eval/tier2/judge_entity.py
 EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -214,6 +232,9 @@ def build_judge_validation(jv_set: str = "v1"):
 # --- Tier-2 runs (one arm) ----------------------------------------------------------------------------------------
 
 
+LEXICON_PIN_KEY = "lexicon/distinction_features.json"
+
+
 def arm_paths(arm: str) -> dict:
     a = ARMS[arm]
     return {**a, "conversations": a["data"] + "/tier2_conversations.jsonl", "questions": a["data"] + "/tier2_qa_questions.jsonl"}
@@ -222,6 +243,9 @@ def arm_paths(arm: str) -> dict:
 def t2_collect(arm: str) -> tuple[dict[str, str], dict[str, str]]:
     """``(payload files, qa id map)`` for one arm. The arm's data sits at the arm's own path; its FROZEN file is projected."""
     p = arm_paths(arm)
+    if not os.path.isfile(os.path.join(REPO, p["frozen"])):
+        raise BuildError(f"{arm}: {p['frozen']} does not exist: the arm is not frozen (python -m tier2.freeze_v2 freeze, once the lexicon, the specs and the "
+                         "test set are final); a kernel is never built from an unfrozen benchmark")
     files = _dkmem_files()
     for rel in TIER2_SYSTEM_FILES:
         if rel != S.FROZEN_FILE:
@@ -235,6 +259,11 @@ def t2_collect(arm: str) -> tuple[dict[str, str], dict[str, str]]:
     view, qmap = S.blind_questions(qs)
     files[p["conversations"]] = conv
     files[p["questions"]] = view
+    if p.get("lexicon"):
+        lex = _read(p["lexicon"])
+        if hashlib.sha256(lex.encode("utf-8")).hexdigest() != pins.get(LEXICON_PIN_KEY):
+            raise BuildError(f"{arm}: {p['lexicon']} no longer matches its frozen pin ({LEXICON_PIN_KEY})")
+        files[p["lexicon"]] = lex
     files[p["frozen"]] = S.project_frozen(frozen_text, questions_view_sha256=hashlib.sha256(view.encode("utf-8")).hexdigest())
     files[S.PASSTHROUGH] = S.make_passthrough(conv)
     return files, qmap
@@ -247,7 +276,8 @@ def t2_check(files: dict[str, str], arm: str) -> None:
     try:
         S.FROZEN_FILE, S.CONVERSATIONS, S.QUESTIONS = p["frozen"], p["conversations"], p["questions"]
         S.DATA_FILES = (p["conversations"], p["questions"])
-        S.ALLOWED_NON_DKMEM = (set(TIER2_SYSTEM_FILES) - {"eval/tier2/FROZEN_v1.0.json"}) | {p["frozen"], *S.DATA_FILES, S.PASSTHROUGH}
+        S.ALLOWED_NON_DKMEM = ((set(TIER2_SYSTEM_FILES) - {"eval/tier2/FROZEN_v1.0.json"}) | {p["frozen"], *S.DATA_FILES, S.PASSTHROUGH}
+                               | ({p["lexicon"]} if p.get("lexicon") else set()))
         S.REQUIRED_FILES = ("dkmem/memory/judge.py", "dkmem/pairwise_eval.schema.json", "dkmem/run_manifest.schema.json", *S.ALLOWED_NON_DKMEM)
         _orig = S._check_inputs
 
@@ -277,18 +307,32 @@ def t2_check(files: dict[str, str], arm: str) -> None:
 
 
 def smoke_conversations(files: dict[str, str], arm: str) -> list[str]:
-    """Label-free, deterministic: the first two Hindi conversations and the first German one, in file order."""
+    """Label-free, deterministic, in file order: v1 arms two Hindi + one German conversation; the v2 arm two Hindi + one Marathi + one Gujarati."""
     p = arm_paths(arm)
     saved = S.CONVERSATIONS
     try:
         S.CONVERSATIONS = p["conversations"]
-        return S.select_conversations(files)
+        return S.select_conversations(files, S.SMOKE_PLANS[p["smoke_plan"]])
     finally:
         S.CONVERSATIONS = saved
 
 
 ALL_CONFIGS = "C:off,C:lexicon,D:off,D:lexicon"
 D_CONFIGS = "D:off,D:lexicon"
+V2_CONFIGS = "A:off,A:lexicon,B:off,B:lexicon,C:off,C:lexicon,D:off,D:lexicon"
+JUDGE_CONFIG_LETTERS = ("A:", "B:", "C:")        # configs whose host is the LLM judge
+_CONFIG_TOKEN = re.compile(r"[ABCD]:(?:off|lexicon)")
+
+
+def check_configs(arm: str, configs: str) -> None:
+    """v1.0 / mirror: exactly the two sets their summary cells are written for. v2: any non-empty, duplicate-free list of CONFIG:MODE."""
+    if ARMS[arm].get("smoke_plan") != "v2":
+        if configs not in (ALL_CONFIGS, D_CONFIGS):
+            raise BuildError(f"configs must be {ALL_CONFIGS!r} or {D_CONFIGS!r} for the {arm} arm")
+        return
+    toks = configs.split(",")
+    if not configs or not all(_CONFIG_TOKEN.fullmatch(t) for t in toks) or len(set(toks)) != len(toks):
+        raise BuildError(f"configs must be a comma list of unique CONFIG:MODE (config A-D, mode off|lexicon), got {configs!r}")
 
 
 def t2_run_args(arm: str, conversations: list[str] | None, run_prefix: str, tau: float = 0.90, seed: int = 0,
@@ -296,8 +340,10 @@ def t2_run_args(arm: str, conversations: list[str] | None, run_prefix: str, tau:
     p = arm_paths(arm)
     args = ["--progress", "--passthrough", "/kaggle/working/src/" + S.PASSTHROUGH, "--data-dir", "/kaggle/working/src/" + p["data"],
             "--frozen", "/kaggle/working/src/" + p["frozen"]]
-    if "C:" in configs:
+    if any(c in configs for c in JUDGE_CONFIG_LETTERS):
         args += ["--judge-prompt", ENTITY_JUDGE_ID, *JUDGE_ARGS]
+    if p.get("lexicon"):
+        args += ["--lexicon", "/kaggle/working/src/" + p["lexicon"]]
     if conversations:
         args += ["--conversations", ",".join(conversations)]
     return args + ["--configs", configs, "--tau", str(tau), "--seed", str(seed), "--run-prefix", run_prefix,
@@ -352,6 +398,138 @@ accept = {
 '''
 
 
+_V2_SUMMARY_CELL = r'''
+import glob, hashlib, re, shutil
+OUTDIR = "/kaggle/working"
+PT_PATH = "/kaggle/working/src/@@PT@@"
+PT_SHA = hashlib.sha256(open(PT_PATH, "rb").read()).hexdigest()
+shutil.copyfile(PT_PATH, OUTDIR + "/t2_passthrough_used.jsonl")      # the exact file the runs were given: validate with it
+EXPECT = @@EXPECT@@
+TAU = float(ARGS[ARGS.index("--tau") + 1])
+REQUESTED = sorted(tuple(x.split(":")) for x in ARGS[ARGS.index("--configs") + 1].split(","))
+USER_TURNS = 0
+for line in open("/kaggle/working/src/@@CONV@@", encoding="utf-8"):
+    if line.strip():
+        c = json.loads(line)
+        if c["conversation_id"] in CONVERSATIONS:
+            USER_TURNS += sum(1 for s_ in c["sessions"] for t_ in s_["turns"] if t_["speaker"] == "user")
+
+
+def stats(v):
+    v = sorted(v)
+    if not v:
+        return {"n": 0}
+    q = lambda f: v[min(len(v) - 1, int(round(f * (len(v) - 1))))]
+    return {"n": len(v), "min": v[0], "median": q(0.5), "p95": q(0.95), "max": v[-1]}
+
+
+def jl_rows(path):
+    return [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
+
+
+summary = {"passthrough_sha256": PT_SHA, "payload_tree_sha256": TREE_SHA256, "runs": {}}
+for info_path in sorted(glob.glob(OUTDIR + "/runs/*.tier2_run_info.json")):
+    rid = os.path.basename(info_path).removesuffix(".tier2_run_info.json")
+    info = json.load(open(info_path, encoding="utf-8"))
+    man = json.load(open(OUTDIR + "/runs/" + rid + "/run_manifest.json", encoding="utf-8"))
+    rows = jl_rows(OUTDIR + "/runs/" + rid + "/pairwise_eval.jsonl")
+    qa = jl_rows(OUTDIR + "/runs/" + rid + ".tier2_qa_answers.jsonl")
+    t2 = man["tier2"]
+    qgi = t2["qa"]["generation_run_info"]
+    entry = {"info": info, "strategy": man["strategy"], "pipeline_config": man["pipeline_config"], "dkmem_mode": man["dkmem_mode"],
+             "dataset_tier": man["dataset_tier"], "rows": len(rows), "thresholds": sorted({repr(r["threshold"]) for r in rows}),
+             "frozen_files_verified": t2["frozen_files_verified"], "frozen_files_not_in_payload": t2["frozen_files_not_in_payload"],
+             "passthrough_sha256": t2["passthrough_sha256"], "embedder_revision": man.get("similarity_model_revision"),
+             "lexicon_sha256": man.get("lexicon_sha256"), "qa_backbone": qgi.get("backbone"), "qa_revision": qgi.get("resolved_revision"),
+             "decision_distribution": t2.get("decision_distribution"),
+             "qa": {"answers": len(qa), "ids_opaque": all(re.fullmatch(r"qa_[0-9a-f]{12}", a["qa_id"]) for a in qa),
+                    "questions_read": t2["qa"].get("questions_read")}}
+    jl_path = OUTDIR + "/runs/" + rid + ".judge_log.jsonl"
+    if os.path.exists(jl_path):
+        jl = jl_rows(jl_path)
+        props = {}
+        for r in jl:
+            props[str(r["proposal"])] = props.get(str(r["proposal"]), 0) + 1
+        entry["judge"] = {"prompt_id": man["judge_prompt_id"], "prompt_sha256": man["judge_prompt_sha256"], "calls": len(jl),
+                          "parse_failures": sum(r["status"] != "ok" for r in jl), "possibly_truncated": sum(bool(r.get("possibly_truncated")) for r in jl),
+                          "proposals": props, "at_budget": sum(bool(r.get("at_budget")) for r in jl),
+                          "output_tokens": stats([r["output_tokens"] for r in jl if r.get("output_tokens") is not None]),
+                          "max_new_tokens": man["generation_run_info"]["generation_params"]["max_new_tokens"],
+                          "backbone": man.get("judge_backbone"), "revision": man["generation_run_info"].get("resolved_revision"),
+                          "separate_from_qa": man.get("judge_model_separate_from_qa")}
+    xl_path = OUTDIR + "/runs/" + rid + ".extraction_log.jsonl"
+    if os.path.exists(xl_path):
+        xl = jl_rows(xl_path)
+        entry["extraction"] = {"prompt_id": man["extraction_prompt_id"], "prompt_sha256": man["extraction_prompt_sha256"], "rows": len(xl),
+                               "failed": sum(r["status"] != "ok" for r in xl), "manifest_calls": man["extraction_calls"],
+                               "manifest_failures": man["extraction_failures"], "backbone": man.get("extraction_backbone"),
+                               "max_new_tokens": man.get("extraction_max_new_tokens")}
+    summary["runs"][rid] = entry
+runs = list(summary["runs"].values())
+judge_runs = [e for e in runs if "judge" in e]
+ext_runs = [e for e in runs if "extraction" in e]
+accept = {
+    "requested_runs_present": sorted((e["pipeline_config"], e["dkmem_mode"]) for e in runs) == REQUESTED,
+    "judge_runs_are_exactly_a_b_c": sorted(e["pipeline_config"] for e in judge_runs) == sorted(e["pipeline_config"] for e in runs if e["pipeline_config"] in "ABC"),
+    "tier2_manifests": bool(runs) and all(e["dataset_tier"] == "tier2_injected_sessions" for e in runs),
+    "evaluator_files_absent": bool(runs) and all(len(e["frozen_files_not_in_payload"]) > 0 for e in runs),
+    "lexicon_is_a_verified_system_pin": bool(runs) and all("lexicon/distinction_features.json" in e["frozen_files_verified"] for e in runs),
+    "passthrough_is_the_payload_file": bool(runs) and all(e["passthrough_sha256"] == PT_SHA for e in runs),
+    "qa_ids_opaque": bool(runs) and all(e["qa"]["ids_opaque"] and e["qa"]["answers"] > 0 for e in runs),
+    "questions_read_after_consolidation": bool(runs) and all(e["info"].get("questions_loaded_lazily") for e in runs),
+    "embedder_is_the_pinned_revision": bool(runs) and all(e["embedder_revision"] == EXPECT["embedder"] for e in runs),
+    "gated_runs_record_the_frozen_lexicon": all(e["lexicon_sha256"] == EXPECT["lexicon"] for e in runs if e["dkmem_mode"] == "lexicon"),
+    "ungated_runs_record_no_lexicon": all(e["lexicon_sha256"] is None for e in runs if e["dkmem_mode"] == "off"),
+    "qa_is_the_pinned_3b_in_every_run": bool(runs) and all(e["qa_backbone"] == EXPECT["qa_model"] and e["qa_revision"] == EXPECT["qa_revision"] for e in runs),
+    "judge_is_the_pinned_identity_judge": all(e["judge"]["prompt_id"] == EXPECT["judge_id"] and e["judge"]["prompt_sha256"] == EXPECT["judge_sha"] for e in judge_runs),
+    "judge_budget_128": all(e["judge"]["max_new_tokens"] == 128 for e in judge_runs),
+    "judge_is_the_pinned_7b_and_separate": all(e["judge"]["backbone"] == EXPECT["judge_model"] and e["judge"]["revision"] == EXPECT["judge_revision"]
+                                              and e["judge"]["separate_from_qa"] is True for e in judge_runs),
+    "judge_thresholds_null": all(e["thresholds"] == ["None"] for e in judge_runs),
+    "d_threshold_is_tau": all(e["thresholds"] == [repr(TAU)] for e in runs if e["pipeline_config"] == "D"),
+    "extraction_prompts_are_the_registered_ones": all([e["extraction"]["prompt_id"], e["extraction"]["prompt_sha256"]] == EXPECT["extraction"][e["pipeline_config"]]
+                                                      for e in ext_runs),
+    "extraction_is_the_pinned_3b_at_256": all(e["extraction"]["backbone"] == EXPECT["qa_model"] and e["extraction"]["max_new_tokens"] == 256 for e in ext_runs),
+    "extraction_log_covers_every_user_turn": all(e["extraction"]["rows"] == USER_TURNS == e["extraction"]["manifest_calls"]
+                                                 and e["extraction"]["failed"] == e["extraction"]["manifest_failures"] for e in ext_runs),
+}
+summary["acceptance"] = accept
+summary["observations"] = {
+    "judge_parse_failures": {rid: e["judge"]["parse_failures"] for rid, e in summary["runs"].items() if "judge" in e},
+    "judge_possibly_truncated": {rid: e["judge"]["possibly_truncated"] for rid, e in summary["runs"].items() if "judge" in e},
+    "judge_proposals": {rid: e["judge"]["proposals"] for rid, e in summary["runs"].items() if "judge" in e},
+    "extraction_failures": {rid: e["extraction"]["failed"] for rid, e in summary["runs"].items() if "extraction" in e},
+    "pairwise_decisions": {rid: (e["decision_distribution"] or {}).get("pairwise_decisions") for rid, e in summary["runs"].items()},
+}
+json.dump(summary, open(OUTDIR + "/v2_summary.json", "w", encoding="utf-8"), indent=1)
+json.dump({"nvidia_smi_L": GPU_LIST, "cli_args": ARGS, "conversations": CONVERSATIONS, "payload_tree_sha256": TREE_SHA256},
+          open(OUTDIR + "/run_environment.json", "w", encoding="utf-8"), indent=2)
+print(json.dumps({"acceptance": accept, "observations": summary["observations"]}, indent=1))
+assert all(accept.values()), "v2 acceptance failed: " + str([k for k, v in accept.items() if not v])
+'''
+
+
+def _v2_expected(arm: str, files: dict[str, str]) -> dict:
+    """The pinned values the v2 acceptance cell compares the runs' manifests with (builder side; nothing is read from a run)."""
+    sys.path.insert(0, REPO)
+    try:
+        from dkmem.memory.native_extract import NATIVE_B_V1
+        from dkmem.memory.prompts import MEM0_EXTRACTION_V4
+    finally:
+        sys.path.remove(REPO)
+    p = arm_paths(arm)
+    pins = json.loads(files[p["frozen"]])["sha256"]
+    return {"embedder": SIMILARITY_REVISION, "lexicon": pins[LEXICON_PIN_KEY], "judge_id": ENTITY_JUDGE_ID, "judge_sha": _entity_sha(),
+            "judge_model": JUDGE_MODEL_ID, "judge_revision": JUDGE_MODEL_REVISION, "qa_model": MODEL_ID, "qa_revision": MODEL_REVISION,
+            "extraction": {"A": [MEM0_EXTRACTION_V4.prompt_id, MEM0_EXTRACTION_V4.sha256], "B": [NATIVE_B_V1.prompt_id, NATIVE_B_V1.sha256]}}
+
+
+def _v2_summary_cell(arm: str, files: dict[str, str]) -> str:
+    p = arm_paths(arm)
+    return (_V2_SUMMARY_CELL.replace("@@PT@@", S.PASSTHROUGH).replace("@@CONV@@", p["conversations"])
+            .replace("@@EXPECT@@", json.dumps(_v2_expected(arm, files), sort_keys=True)))
+
+
 def _entity_sha(judge: str = ENTITY_JUDGE_ID) -> str:
     const = {"merge_judge_entity_t2_v1": "ENTITY_JUDGE_PROMPT_SHA256", "merge_judge_entity_t2_v2": "ENTITY_JUDGE_V2_PROMPT_SHA256"}[judge]
     m = re.search(const + r' = "([0-9a-f]{64})"', _read("eval/tier2/frozen_judge.py"))
@@ -359,9 +537,9 @@ def _entity_sha(judge: str = ENTITY_JUDGE_ID) -> str:
 
 
 def build_tier2(arm: str, conversations: list[str] | None, smoke: bool, run_prefix: str, configs: str = ALL_CONFIGS):
-    if configs not in (ALL_CONFIGS, D_CONFIGS):
-        raise BuildError(f"configs must be {ALL_CONFIGS!r} or {D_CONFIGS!r}")
-    d_only = configs == D_CONFIGS
+    check_configs(arm, configs)
+    v2 = ARMS[arm].get("smoke_plan") == "v2"
+    d_only = configs == D_CONFIGS and not v2
     files, qmap = t2_collect(arm)
     t2_check(files, arm)
     p = arm_paths(arm)
@@ -372,16 +550,23 @@ def build_tier2(arm: str, conversations: list[str] | None, smoke: bool, run_pref
         raise BuildError(f"unknown conversation ids: {sorted(set(conversations) - set(known))}")
     args = t2_run_args(arm, conversations, run_prefix, configs=configs)
     has_q = bool(files[p["questions"]].strip())
-    summary = _t2_summary_cell(len(conversations or known), has_q, d_only)
-    if d_only:
-        summary = (summary.replace("@@QA_OPAQUE@@", 'bool(runs) and all(e["qa"]["ids_opaque"] and e["qa"]["answers"] > 0 for e in runs)' if has_q
-                                   else 'bool(runs) and all(e["qa"]["answers"] == 0 for e in runs)')
-                   .replace("@@QA_LAZY@@", 'bool(runs) and all(e["info"].get("questions_loaded_lazily") for e in runs)' if has_q else "True"))
+    if v2:
+        if not has_q:
+            raise BuildError("the v2 arm needs QA questions")
+        summary = _v2_summary_cell(arm, files)
+        title = (f"# DK-Mem Tier 2 ({arm} arm, v2 benchmark): configs {configs}; judge {ENTITY_JUDGE_ID} on {JUDGE_MODEL_ID} (A, B, C); "
+                 f"extraction and QA answerer {MODEL_ID}; {len(conversations or known)} conversations")
+    else:
+        summary = _t2_summary_cell(len(conversations or known), has_q, d_only)
+        if d_only:
+            summary = (summary.replace("@@QA_OPAQUE@@", 'bool(runs) and all(e["qa"]["ids_opaque"] and e["qa"]["answers"] > 0 for e in runs)' if has_q
+                                       else 'bool(runs) and all(e["qa"]["answers"] == 0 for e in runs)')
+                       .replace("@@QA_LAZY@@", 'bool(runs) and all(e["info"].get("questions_loaded_lazily") for e in runs)' if has_q else "True"))
+        title = (f"# DK-Mem Tier 2 ({arm} arm): Config D only (embedding threshold, gate off/lexicon), {len(conversations or known)} conversations"
+                 if d_only else
+                 f"# DK-Mem Tier 2 ({arm} arm): Config C identity judge {ENTITY_JUDGE_ID} on {JUDGE_MODEL_ID} (judge backbone differs from Tier 1) "
+                 f"+ Config D; QA answerer {MODEL_ID} for every config; {len(conversations or known)} conversations")
     cells = [S._code(_run_cell("tier2.run_tier2", args, f"CONVERSATIONS = {json.dumps(conversations or known)}")), S._code(summary)]
-    title = (f"# DK-Mem Tier 2 ({arm} arm): Config D only (embedding threshold, gate off/lexicon), {len(conversations or known)} conversations"
-             if d_only else
-             f"# DK-Mem Tier 2 ({arm} arm): Config C identity judge {ENTITY_JUDGE_ID} on {JUDGE_MODEL_ID} (judge backbone differs from Tier 1) "
-             f"+ Config D; QA answerer {MODEL_ID} for every config; {len(conversations or known)} conversations")
     nb, payload, tree = _notebook(title, files, cells, S.FORBIDDEN_NAME_PARTS, "tier2.run_tier2")
     ev = {"kind": "tier2", "arm": arm, "smoke": smoke, "configs": configs, "run_args": args, "conversations": conversations or known,
           "passthrough_sha256": hashlib.sha256(files[S.PASSTHROUGH].encode("utf-8")).hexdigest(),
@@ -468,7 +653,10 @@ def _build(spec: dict):
         return build_memory_probe()
     if spec["kind"] == "judge-validation":
         return build_judge_validation(spec.get("set", "v1"))
-    return build_tier2(spec["arm"], spec.get("conversations_arg"), spec.get("smoke", False), spec["run_prefix"], spec.get("configs", ALL_CONFIGS))
+    if spec["arm"] == "v2" and spec.get("arm_root"):
+        ARMS["v2"] = v2_arm(spec["arm_root"])
+    default_configs = V2_CONFIGS if ARMS[spec["arm"]].get("smoke_plan") == "v2" else ALL_CONFIGS
+    return build_tier2(spec["arm"], spec.get("conversations_arg"), spec.get("smoke", False), spec["run_prefix"], spec.get("configs", default_configs))
 
 
 def write(spec: dict, user: str, slug: str, out: str) -> int:
@@ -541,9 +729,12 @@ def main(argv=None) -> int:
     ap.add_argument("--arm", choices=tuple(ARMS))
     ap.add_argument("--set", choices=tuple(JV_SETS), default="v1", help="judge-validation set (v2 validates merge_judge_entity_t2_v2)")
     ap.add_argument("--conversations")
-    ap.add_argument("--smoke", action="store_true", help="first two Hindi + first German conversation of the arm (label-free)")
+    ap.add_argument("--smoke", action="store_true",
+                    help="label-free smoke selection: v1 arms two Hindi + one German conversation; the v2 arm two Hindi + one Marathi + one Gujarati")
+    ap.add_argument("--arm-root", help="v2 arm only: the arm root under eval/ (default eval/tier2/v2)")
     ap.add_argument("--run-prefix")
-    ap.add_argument("--configs", choices=("all", "D"), default="all", help="tier2: C+D (default) or Config D only")
+    ap.add_argument("--configs", default=None,
+                    help="tier2: v1 arms 'all' (C+D, default) or 'D'; the v2 arm 'full' (A-D x off/lexicon, default) or a CONFIG:MODE list such as A:off,A:lexicon")
     ap.add_argument("--user")
     ap.add_argument("--slug")
     ap.add_argument("--out")
@@ -559,8 +750,16 @@ def main(argv=None) -> int:
         if not (a.arm and a.run_prefix):
             ap.error("tier2 needs --arm and --run-prefix")
         spec.update(arm=a.arm, run_prefix=a.run_prefix, smoke=a.smoke, conversations_arg=a.conversations.split(",") if a.conversations else None)
-        if a.configs == "D":
-            spec["configs"] = D_CONFIGS
+        v2_arm_requested = ARMS[a.arm].get("smoke_plan") == "v2"
+        if a.arm_root and not v2_arm_requested:
+            ap.error("--arm-root applies to the v2 arm only")
+        if a.arm_root:
+            spec["arm_root"] = a.arm_root
+        alias = {"all": ALL_CONFIGS, "D": D_CONFIGS, "full": V2_CONFIGS}
+        if a.configs is not None:
+            spec["configs"] = alias.get(a.configs, a.configs)
+        elif v2_arm_requested:
+            spec["configs"] = V2_CONFIGS
     return write(spec, a.user, a.slug, a.out)
 
 

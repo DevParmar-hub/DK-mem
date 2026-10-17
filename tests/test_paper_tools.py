@@ -52,6 +52,15 @@ class TestNumbersFromTheStoredReport(unittest.TestCase):
     def test_committed_generated_files_are_current(self):
         self.assertEqual(NUM.main(["--check"]), 0)
 
+    def test_the_committed_exclusion_list_is_the_default_for_writing_and_checking(self):
+        # --check and a plain run read the same list, so following the documented workflow never leaves the merge gate stale
+        if not NUM.EXCLUSIONS.exists():
+            self.skipTest("no paper/review/exclusions.txt")
+        self.assertEqual(NUM.main(["--check", "--exclude", str(NUM.EXCLUSIONS)]), 0)
+        excluded = {l.split("#")[0].strip() for l in NUM.EXCLUSIONS.read_text(encoding="utf-8").splitlines()} - {""}
+        if excluded:
+            self.assertEqual(NUM.main(["--check", "--no-exclude"]), 1)      # the committed files carry the sensitivity view
+
     def test_exclusions_add_a_sensitivity_view_and_never_change_the_primary_numbers(self):
         ex = NUM.build(json.loads(NUM.REPORT.read_bytes()), {"t2p_0002"})
         for arm in ("Main", "Mirror"):
@@ -68,7 +77,32 @@ class TestNumbersFromTheStoredReport(unittest.TestCase):
             NUM.main(["--report", str(bad), "--check"])
 
 
+FIG = load("paper/tools/make_figures.py", "make_figures")
 T1 = load("paper/tools/make_tier1_numbers.py", "make_tier1_numbers")
+
+
+@unittest.skipUnless(NUM.REPORT.exists(), "verified entity report not present (held by the lead)")
+class TestFigureNumbers(unittest.TestCase):
+    def setUp(self):
+        self.c = FIG.cosines(json.loads(NUM.REPORT.read_bytes()))
+
+    def test_every_pair_is_inside_the_drawn_range_and_counts_match(self):
+        for arm, d in self.c.items():
+            self.assertEqual((len(d["different"]), len(d["same"])), (42, 27))
+            self.assertTrue(all(0.40 <= v <= 1.0 for vals in d.values() for v in vals), arm)    # the first draft silently cut off values above 0.90
+
+    def test_the_main_arm_orders_the_relations_the_wrong_way_and_the_mirror_reverses_it(self):
+        import statistics
+        m, r = self.c["Main"], self.c["Mirror"]
+        self.assertGreater(statistics.median(m["different"]), statistics.median(m["same"]))
+        self.assertLess(statistics.median(r["different"]), statistics.median(r["same"]))
+
+    def test_above_tau_counts_match_the_stored_false_merges(self):
+        self.assertEqual(sum(v > FIG.TAU for v in self.c["Main"]["different"]), 5)       # the 5 false merges of D at tau 0.90
+        self.assertEqual(sum(v > FIG.TAU for v in self.c["Main"]["same"]), 0)
+
+    def test_committed_figure_numbers_are_current(self):
+        self.assertEqual(FIG.main(["--check"]), 0)
 
 
 @unittest.skipUnless((T1.SCORED / "score.json").exists(), "Tier-1 key-holder scoring not present (held by the key holder)")
