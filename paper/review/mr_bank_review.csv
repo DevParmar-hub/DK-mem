@@ -25,7 +25,7 @@
 23,Mala ek chhota break ghyaycha aahe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
 24,Aaj bhaji khup chhan zali,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
 25,Mi navin recipe try keli,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
-26,Ratri film baghayche aahe,unsure,"[Claude draft, not native-verified] Gender of film in Marathi uncertain (baghayche vs baghaychi); native speaker should confirm agreement. No gating marker."
+26,Ratri film baghayche aahe,unsure,"[Claude draft, not native-verified] Gender of film in Marathi uncertain (baghayche vs baghaychi); native speaker should confirm agreement. No gating marker. PROPOSED FIX: EXCLUDE this distractor turn from Marathi use unless a native speaker confirms the agreement; no replacement wording is proposed. Native confirmation required."
 27,Mala thoda ukaadha vatat aahe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
 28,Aaj sakali lavkar uthlo,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
 29,Ghari nave curtains lavle aahet,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
