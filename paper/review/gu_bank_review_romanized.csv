@@ -1,31 +1,31 @@
 ﻿index,distractor_user_turn,verdict(ok/wrong/unsure),comment
-0,aaje aakho divas kaam rahyu,ok,
-1,kaale kadaach varsad padshe,ok,
-2,me nava earbuds mangavya chhe,ok,
-3,raatre jamvama paneer banavyu hatu,ok,
-4,mare savare vahela uthvu pade chhe,ok,
-5,hamna hu roj farva jaun chu,ok,
-6,mara laptopni battery jaldi khatam thai jay chhe,ok,
-7,aaje chaa thodi vadhare thai gai,ok,
-8,mare navu pustak vanchvu chhe,ok,
-9,ghare navo chhod vavyo chhe,ok,
-10,aaje bahu garmi chhe,ok,
-11,hu sanje thodi kasrat karu chu,ok,
-12,shaak leva bajarma javu chhe,ok,
-13,mobile nu charger malatu nathi,ok,
-14,aaje raatre vahela suvu chhe,ok,
-15,Aaje divas bhar kaam rahyu,ok,
-16,Mane ek navu gaanu gamyu che,ok,
-17,Saanje chaa pivi che,ok,
-18,Hu hamna jaman banavu chu,ok,
-19,Aa mahine ghano varsaad padyo,ok,
-20,Mare nava shoes levana che,ok,
-21,Hamna hu roj cycle chalavu chu,ok,
-22,Wifi bahu dhimu chaale che,ok,
-23,Mare thodo break levo che,ok,
-24,Aaje shaak bahu saras bani,ok,
-25,Me navi recipe try kari,ok,
-26,Raatre film jovi che,ok,
-27,Mane thodo thaak lagyo che,ok,
-28,Aaje savare vahela uthyo,ok,
-29,Gharma navi curtain lagavi che,ok,
+0,aaje aakho divas kaam rahyu,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+1,kaale kadaach varsad padshe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+2,me nava earbuds mangavya chhe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+3,raatre jamvama paneer banavyu hatu,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+4,mare savare vahela uthvu pade chhe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+5,hamna hu roj farva jaun chu,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+6,mara laptopni battery jaldi khatam thai jay chhe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+7,aaje chaa thodi vadhare thai gai,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+8,mare navu pustak vanchvu chhe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+9,ghare navo chhod vavyo chhe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+10,aaje bahu garmi chhe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+11,hu sanje thodi kasrat karu chu,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+12,shaak leva bajarma javu chhe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+13,mobile nu charger malatu nathi,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+14,aaje raatre vahela suvu chhe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+15,Aaje divas bhar kaam rahyu,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+16,Mane ek navu gaanu gamyu che,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+17,Saanje chaa pivi che,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+18,Hu hamna jaman banavu chu,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+19,Aa mahine ghano varsaad padyo,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+20,Mare nava shoes levana che,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+21,Hamna hu roj cycle chalavu chu,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+22,Wifi bahu dhimu chaale che,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+23,Mare thodo break levo che,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+24,Aaje shaak bahu saras bani,wrong,"[Claude draft, not native-verified] Agreement error: 'shaak' is neuter, so 'saras banyu', not feminine 'bani'. Proposed text: 'Aaje shaak bahu saras banyu'. No marker, so it does not affect the gate; it is a naturalness defect of the distractor."
+25,Me navi recipe try kari,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+26,Raatre film jovi che,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+27,Mane thodo thaak lagyo che,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+28,Aaje savare vahela uthyo,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+29,Gharma navi curtain lagavi che,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker. 'lagavi che' = (I) have put up; fine."

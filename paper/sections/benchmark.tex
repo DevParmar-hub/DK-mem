@@ -61,17 +61,16 @@ distractor user turns were written for each language. No system was run on v2.1,
 
 % Review counts: verdicts come from the generated \ReviewHiPairs... macros (paper/tools/summarize_reviews.py). The awkward (14) and
 % class (4) counts are taken from paper/review/hi_pairs_review.csv by hand because no generated macro exists for those columns yet.
-\paragraph{In-team native review.} One native speaker per language, each a co-author, reviewed the items with the gold labels visible,
-so the review is in-team and not independent. Each Hindi pair evaluated in Sec.~\ref{sec:results} was judged on label correctness under
+\paragraph{In-team review.} A native Hindi speaker, a co-author, reviewed the Hindi items with the gold labels visible, so the review is
+in-team and not independent. Each Hindi pair evaluated in Sec.~\ref{sec:results} was judged on label correctness under
 the conventions above, naturalness and class. Of the \ReviewHiPairsTotal{} Hindi pairs, \ReviewHiPairsCorrect{} labels were judged
 correct, \ReviewHiPairsWrong{} wrong and \ReviewHiPairsAmbiguous{} ambiguous: the only pair that shifts between \emph{tu} and \emph{tum}
 rather than \emph{tum} and \emph{aap} (addressed to ``Maa''), which Team B's audit also flagged. The four qualifier pairs were marked as
 misclassified, because the qualifier, not the name form, carries the distinction. For naturalness, 14 pairs were judged awkward but
 plausible and none implausible; the comments cite formal weekday names (e.g.\ \emph{mangalvar}) in casual Hinglish and \emph{tum}/\emph{aap}
 switches towards the same addressee. No label was edited: pairs marked wrong or ambiguous are excluded only in a sensitivity analysis
-(Sec.~\ref{sec:results}), and the primary numbers use all pairs. In the extension, \ReviewMrPairsCorrect{} of \ReviewMrPairsTotal{}
-Marathi and \ReviewGuPairsCorrect{} of \ReviewGuPairsTotal{} Gujarati specifications were judged correct. The six German pairs had no
-native review.
+(Sec.~\ref{sec:results}), and the primary numbers use all pairs. The Marathi and Gujarati extension and the six German pairs have not
+been reviewed by native speakers.
 
 \paragraph{Splits and exposure.} Every number in this paper is a development result. The 63 Hindi v1.0 pairs were used throughout
 development and are in the development split of Team B's v2 package. That package's 30-pair test split of new items had its sentences
