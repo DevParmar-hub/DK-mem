@@ -20,3 +20,16 @@ judge's behaviour in those languages is unvalidated.}
 
 \paragraph{Ethics.} \todo{P4: no personal data; constructed sentences; kinship-based assumptions; risk of encoding normative family
 structures.}
+
+% P2 (Hindi native): appended paragraph. Verdict counts come from the generated \ReviewHiPairs... macros; the awkward (14) and class (4)
+% counts are copied by hand from paper/review/hi_pairs_review.csv because no generated macro exists for those columns.
+\paragraph{Hindi data.} The Hindi pairs are templated, constructed sentences and do not reflect real-world frequencies. The 32 kinship
+pairs, all gold-different, also differ in city or weekday, so the attribute alone can separate them. Other labels rest on conventions that
+real Hindi usage need not follow: a shared name means one person, although two people can share a name; a \emph{tum}/\emph{aap} or
+\emph{tu}/\emph{tum} shift with the same vocative means one addressee, although such switches read as awkward in several pairs and the
+turns address the relative directly; and ``school wali'' and ``gym wali'' Neha are two people, although one person can be both and the
+source pair may describe two events involving one person. A
+co-author reviewed all \ReviewHiPairsTotal{} pairs against these conventions with the gold labels visible, so the review is neither
+independent nor blind: \ReviewHiPairsCorrect{} correct, \ReviewHiPairsAmbiguous{} ambiguous (\emph{tu}/\emph{tum}),
+\ReviewHiPairsWrong{} wrong, 14 awkward (mostly formal weekday names) and four qualifier pairs misclassified as \emph{name\_variant}.
+Independent, blind native-speaker review is still needed.
