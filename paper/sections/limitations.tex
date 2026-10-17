@@ -15,8 +15,13 @@ is not built yet.}
 \paragraph{Languages.} \todo{P4: results are Hindi-only; Marathi/Gujarati items exist with in-team review but were not evaluated; the
 judge's behaviour in those languages is unvalidated.}
 
-\paragraph{Lexicon.} \todo{P3: 15 Hindi entries; context-free; the reflexive \emph{apne aap} is tagged as the polite pronoun (affects 0 of
-46{,}106 frozen benchmark strings); proposed Marathi/Gujarati entries are unreviewed proposals.}
+\paragraph{Lexicon and Marathi review.} The v1 lexicon has 15 Hindi entries and is context-free, so it can mis-tag a word used outside its intended sense:
+the Hindi reflexive \emph{apne aap} is tagged as the polite pronoun \emph{aap} (no frozen benchmark text contains this phrase). The same limitation applies more broadly
+to kinship terms used as address for non-relatives and to register terms that also mark number. Marathi \emph{tumhi}, for example, is both a polite and a plural ``you''.
+No Marathi or Gujarati lexicon entries are part of v1; the proposed Marathi entries are unvalidated, and their suffix lists omit some inflected forms and all romanised inflections.
+We did not run the Marathi or Gujarati items, so we make no claim about performance in those languages. The Marathi specifications, distractor turns and proposed lexicon entries
+received an in-team review in which the annotations were drafted by an AI assistant rather than by a native speaker; this is neither independent nor full native validation, and the 30 distractor turns have only this limited check.
+Repaired items and uncertain labels (for example, kinship same-pairs that rely on an unstated single-relative assumption) need native-speaker confirmation before any future benchmark release.
 
 \paragraph{Ethics.} \todo{P4: no personal data; constructed sentences; kinship-based assumptions; risk of encoding normative family
 structures.}

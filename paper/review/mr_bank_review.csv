@@ -1,31 +1,31 @@
 ﻿index,distractor_user_turn,verdict(ok/wrong/unsure),comment
-0,आज दिवसभर खूप काम होतं,,
-1,उद्या कदाचित पाऊस पडेल,,
-2,मी नवीन इअरबड्स मागवले आहेत,,
-3,रात्रीच्या जेवणाला पनीर केलं होतं,,
-4,मला सकाळी लवकर उठावं लागतं,,
-5,सध्या मी रोज फिरायला जातो,,
-6,माझ्या लॅपटॉपची बॅटरी लवकर संपते,,
-7,आज चहा थोडा जास्त झाला,,
-8,मला नवीन पुस्तक वाचायचं आहे,,
-9,घरी नवीन झाड लावलं आहे,,
-10,आज खूप गरमी होत आहे,,
-11,मी संध्याकाळी थोडा व्यायाम करतो,,
-12,भाजी घ्यायला बाजारात जायचं आहे,,
-13,मोबाईलचा चार्जर सापडत नाहीये,,
-14,आज रात्री लवकर झोपायचं आहे,,
-15,Aaj divasbhar khup kaam hota,,
-16,Mala ek navin gaana aavadla aahe,,
-17,Sandhyakali chaha pyaycha aahe,,
-18,Mi ata jevan banvat aahe,,
-19,Ya mahinyat khup paus padla,,
-20,Mala nave shoes ghyayche aahet,,
-21,Aajkal mi roj cycle chalvto,,
-22,Wifi khup halu chalat aahe,,
-23,Mala ek chhota break ghyaycha aahe,,
-24,Aaj bhaji khup chhan zali,,
-25,Mi navin recipe try keli,,
-26,Ratri film baghayche aahe,,
-27,Mala thoda ukaadha vatat aahe,,
-28,Aaj sakali lavkar uthlo,,
-29,Ghari nave curtains lavle aahet,,
+0,आज दिवसभर खूप काम होतं,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+1,उद्या कदाचित पाऊस पडेल,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+2,मी नवीन इअरबड्स मागवले आहेत,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+3,रात्रीच्या जेवणाला पनीर केलं होतं,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+4,मला सकाळी लवकर उठावं लागतं,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+5,सध्या मी रोज फिरायला जातो,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+6,माझ्या लॅपटॉपची बॅटरी लवकर संपते,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+7,आज चहा थोडा जास्त झाला,ok,"[Claude draft, not native-verified] Natural; could mean 'too much tea' or 'tea turned out too strong' - harmless as a distractor; no gating marker."
+8,मला नवीन पुस्तक वाचायचं आहे,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+9,घरी नवीन झाड लावलं आहे,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+10,आज खूप गरमी होत आहे,unsure,"[Claude draft, not native-verified] गरमी reads Hindi-influenced; Marathi more usually says उकाडा / गरम. Suggest आज खूप उकाडा आहे. Otherwise no gating marker."
+11,मी संध्याकाळी थोडा व्यायाम करतो,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+12,भाजी घ्यायला बाजारात जायचं आहे,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+13,मोबाईलचा चार्जर सापडत नाहीये,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+14,आज रात्री लवकर झोपायचं आहे,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+15,Aaj divasbhar khup kaam hota,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+16,Mala ek navin gaana aavadla aahe,unsure,"[Claude draft, not native-verified] Romanisation/agreement doubtful: gaana looks Hindi-like (Marathi गाणं, neuter) and neuter past would be aavadla -> aavadle/aavadlay rather than masculine aavadla. Suggest Mala ek navin gaan aavadla aahe or confirm usage. No gating marker."
+17,Sandhyakali chaha pyaycha aahe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+18,Mi ata jevan banvat aahe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+19,Ya mahinyat khup paus padla,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+20,Mala nave shoes ghyayche aahet,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+21,Aajkal mi roj cycle chalvto,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+22,Wifi khup halu chalat aahe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+23,Mala ek chhota break ghyaycha aahe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+24,Aaj bhaji khup chhan zali,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+25,Mi navin recipe try keli,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+26,Ratri film baghayche aahe,unsure,"[Claude draft, not native-verified] Gender of film in Marathi uncertain (baghayche vs baghaychi); native speaker should confirm agreement. No gating marker."
+27,Mala thoda ukaadha vatat aahe,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+28,Aaj sakali lavkar uthlo,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
+29,Ghari nave curtains lavle aahet,ok,"[Claude draft, not native-verified] Natural, grammatical; no kinship or register marker."
