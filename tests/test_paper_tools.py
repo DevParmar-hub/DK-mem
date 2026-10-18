@@ -129,6 +129,61 @@ class TestTier1Numbers(unittest.TestCase):
         self.assertEqual(T1.main(["--check"]), 0)
 
 
+V2 = load("paper/tools/make_v2_numbers.py", "make_v2_numbers")
+
+
+@unittest.skipUnless(all((V2.RUN_DIR / n).exists() for n in V2.PINS), "v2 score reports not present (held by the lead)")
+class TestV2Numbers(unittest.TestCase):
+    def setUp(self):
+        self.p, self.k = V2.load_pinned()
+        self.n = V2.build(self.p, self.k)
+
+    def test_eight_runs_and_the_126_pairs_split_by_language(self):
+        self.assertEqual(sorted(self.n["runs"]), sorted(c + m for c in "ABCD" for m in ("Off", "Lex")))
+        self.assertEqual((self.n["pairs"]["different"], self.n["pairs"]["same"]), (68, 58))
+        bl = self.n["pairs"]["by_language"]
+        self.assertEqual(sum(v["different"] for v in bl.values()), 68)
+        self.assertEqual(sum(v["same"] for v in bl.values()), 58)
+
+    def test_the_gate_never_increases_false_merges(self):
+        for c in "ABCD":
+            off, on = self.n["runs"][c + "Off"], self.n["runs"][c + "Lex"]
+            self.assertLessEqual(on["FCR"]["k"], off["FCR"]["k"])                       # veto-only
+            self.assertGreaterEqual(on["MCR"]["k"], off["MCR"]["k"])
+            self.assertLessEqual(on["kinship_only"]["FCR"]["k"], off["FCR"]["k"])
+            self.assertEqual(self.n["contrasts"][f"{c}|different"]["discordant_y_only"], 0)
+
+    def test_the_headline_numbers(self):
+        r = self.n["runs"]
+        self.assertEqual((r["COff"]["FCR"]["k"], r["CLex"]["FCR"]["k"], r["COff"]["MCR"]["k"], r["CLex"]["MCR"]["k"]), (18, 7, 5, 20))
+        self.assertEqual((r["CLex"]["kinship_only"]["FCR"]["k"], r["CLex"]["kinship_only"]["MCR"]["k"]), (7, 11))
+        self.assertEqual(r["CLex"]["by_class"]["kinship"]["FCR"]["k"], 0)
+
+    def test_the_outputs_carry_no_per_pair_labels(self):
+        text = "".join(V2.render(self.n).values())
+        self.assertNotIn("t2p_", text)
+        self.assertNotIn("injected_pair", text)
+
+    def test_a_replay_with_another_lexicon_is_refused(self):
+        bad = json.loads(json.dumps(self.p))
+        bad["inputs"]["lexicon_is_arm_pin"] = False
+        with self.assertRaises(AssertionError):
+            V2.build(bad, self.k)
+
+    def test_a_tampered_report_is_refused(self):
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        for n in V2.PINS:
+            shutil.copyfile(V2.RUN_DIR / n, tmp / n)
+        first = next(iter(V2.PINS))
+        (tmp / first).write_bytes((tmp / first).read_bytes() + b" ")
+        with self.assertRaises(SystemExit):
+            V2.load_pinned(tmp)
+
+    def test_committed_v2_files_are_current(self):
+        self.assertEqual(V2.main(["--check"]), 0)
+
+
 class TestReviewSummary(unittest.TestCase):
     def test_every_row_is_counted_and_only_wrong_or_ambiguous_hindi_pairs_are_excluded(self):
         tmp = Path(tempfile.mkdtemp())

@@ -20,15 +20,16 @@ weekday, a confound that the mirror arm (Section~\ref{sec:benchmark}) was built 
 Hindi register pairs are all gold-same, so a class effect cannot be separated from a relation effect. All 27 gold-same pairs are register or
 name variants, so the gate's cost on same-entity \emph{kinship} pairs is untested.
 
-\paragraph{Languages.} Results are Hindi-only (the German pairs appear only in the ``all'' rows). The Marathi and Gujarati items exist but have
-not been reviewed by native speakers. These items were not evaluated, and the judge's
-behaviour in those languages is unvalidated.
+\paragraph{Languages.} The v1.0 and mirror results are Hindi-only (the German pairs appear only in the ``all'' rows). The v2 arm adds
+Marathi and Gujarati, but those items have not been reviewed by native speakers, each language contributes only about a sixth of the
+pairs, and the judge's behaviour in those languages has not been validated, so their per-language numbers are indicative only.
 
 \paragraph{Lexicon and Marathi review.} The v1 lexicon has 15 Hindi entries and is context-free, so it can mis-tag a word used outside its intended sense:
 the Hindi reflexive \emph{apne aap} is tagged as the polite pronoun \emph{aap} (no frozen benchmark text contains this phrase). The same limitation applies more broadly
 to kinship terms used as address for non-relatives and to register terms that also mark number. Marathi \emph{tumhi}, for example, is both a polite and a plural ``you''.
-No Marathi or Gujarati lexicon entries are part of v1; the proposed Marathi and Gujarati entries are unvalidated, and their suffix lists omit some inflected forms and all romanised inflections.
-We did not run the Marathi or Gujarati items, so we make no claim about performance in those languages. The Marathi and Gujarati specifications, distractor turns and proposed lexicon entries
+No Marathi or Gujarati lexicon entries are part of v1; the Marathi and Gujarati entries added in v2 are unvalidated, and their suffix lists omit some inflected forms and all romanised inflections.
+The v2 results also expose coverage gaps in the Hindi entries (periphrases such as ``mother's sister'', a missing spelling, and a possessive phrase tagged as the wrong relative), and the register class
+vetoes register shifts that our labels treat as one addressee. The Marathi and Gujarati specifications, distractor turns and proposed lexicon entries
 have had only a limited preliminary check, which is neither independent nor native validation.
 Repaired items and uncertain labels (for example, kinship same-pairs that rely on an unstated single-relative assumption) need native-speaker confirmation before any future benchmark release.
 

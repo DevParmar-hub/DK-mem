@@ -141,14 +141,15 @@ def _load(p):
     return [json.loads(l) for l in Path(p).read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
-CURRENT = [(r, f, m) for r, f, m in _current_logs() if not r.startswith("t2full")]
+V2_FULL = "v2_full_20261017"          # the v2 full run (6 judge logs); counted separately so neither set can switch the other's check off
+CURRENT = [(r, f, m) for r, f, m in _current_logs() if not r.startswith("t2full") and V2_FULL not in str(f)]
+V2_FULL_LOGS = [(r, f, m) for r, f, m in _current_logs() if V2_FULL in str(f)]
 LEGACY = [(r, f, m) for r, f, m in _current_logs() if r.startswith("t2full")]
 
 
-@unittest.skipUnless(len(CURRENT) == 10, "the 10 stored current judge logs are not all present (gitignored run outputs)")
-class TestStoredCurrentLogs(unittest.TestCase):
-    def test_every_current_log_verifies_independently(self):
-        for run, log, man in CURRENT:
+class _VerifiesLogs:
+    def check(self, logs):
+        for run, log, man in logs:
             with self.subTest(run=run):
                 v = P.verify_log(json.loads(man.read_text(encoding="utf-8")), _load(log))
                 self.assertEqual(v["status"], "verified", v["problems"])
@@ -156,6 +157,18 @@ class TestStoredCurrentLogs(unittest.TestCase):
                 self.assertEqual(v["n_identity_verified"], v["n_rows"])
                 self.assertEqual(v["n_logged_agree_with_reparse"], v["n_rows"])
                 self.assertEqual(v["problems"], {})
+
+
+@unittest.skipUnless(len(CURRENT) == 10, "the 10 stored current judge logs are not all present (gitignored run outputs)")
+class TestStoredCurrentLogs(_VerifiesLogs, unittest.TestCase):
+    def test_every_current_log_verifies_independently(self):
+        self.check(CURRENT)
+
+
+@unittest.skipUnless(len(V2_FULL_LOGS) == 6, "the 6 v2 full-run judge logs are not all present (gitignored run outputs)")
+class TestStoredV2FullLogs(_VerifiesLogs, unittest.TestCase):
+    def test_every_v2_full_run_log_verifies_independently(self):
+        self.check(V2_FULL_LOGS)
 
 
 @unittest.skipUnless(len(LEGACY) == 2 and (FULL_RUNS / "t2_passthrough.jsonl").exists(), "the two historical t2full runs are not present")

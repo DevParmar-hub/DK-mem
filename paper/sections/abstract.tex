@@ -6,6 +6,8 @@ registers. We study \emph{false consolidation}---merging different people---and 
 benchmark, and propose DK-Mem, a deterministic compatibility gate that vetoes a merge when a small lexicon finds conflicting distinction
 features. On the Hindi pairs, an LLM identity judge falsely merges \MainCoffHiFCR{} gold-different pairs; with the gate, \MainClexHiFCR{},
 at the cost of \MainClexHiMCR{} missed merges (versus \MainCoffHiMCR{}). An embedding threshold host never merges gold-same pairs at the
-tested threshold. Results are single-seed, Hindi-only and preliminary; we release the benchmark, a verification pipeline, and
-Marathi and Gujarati extensions that are not yet native-verified. \todo{P1: final pass after results}
+tested threshold. On a second arm of \VTwoNPairs{} pairs in Hindi, Marathi and Gujarati, the gate lowers the judge's false merges from
+\VTwoCOffFCR{} to \VTwoCLexFCR{} and removes every kinship false merge, while missed merges rise from \VTwoCOffMCR{} to \VTwoCLexMCR{},
+mostly on register pairs. Results are single-seed and preliminary, and the Marathi and Gujarati items are not yet native-verified; we
+release the benchmark and a verification pipeline. \todo{P1: final pass after results}
 \end{abstract}

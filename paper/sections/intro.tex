@@ -40,9 +40,10 @@ seed, development data; Section~\ref{sec:results}).
 (1) A controlled multi-session injection benchmark for false and missed consolidation with explicit labelling conventions
 (Section~\ref{sec:benchmark}).
 (2) DK-Mem, a veto-only compatibility gate (Section~\ref{sec:method}).
-(3) A preliminary Hindi study of an LLM-judge host and an embedding-threshold host, with and without the gate
-(Section~\ref{sec:results}).
+(3) A preliminary study of an LLM-judge host and an embedding-threshold host, with and without the gate, on Hindi and, in a
+second frozen arm, on Hindi, Marathi and Gujarati with all four configurations (Section~\ref{sec:results}).
 (4) An evaluation-integrity methodology, independent verification of judge logs and of the embedder, with the failure case that motivated
 it (Appendix~\ref{app:repro}).
-The results are single-seed, development-set and Hindi-only; the Marathi and Gujarati extension is not native-verified and was not evaluated
-(Section~\ref{sec:limits}).
+On the larger v2 arm, which adds Marathi and Gujarati and all four configurations, the gate removes every kinship false merge of the LLM
+hosts, and most of its cost comes from register (Section~\ref{sec:results-v2}). The results are single-seed and on development data; the
+Marathi and Gujarati items and lexicon entries are not native-verified, and their per-language cells are small (Section~\ref{sec:limits}).

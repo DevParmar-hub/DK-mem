@@ -310,5 +310,43 @@ class TestPayloadIsSelfContained(unittest.TestCase):
             self.assertTrue(Path(line).resolve().is_relative_to(tmp.resolve()), line)      # imported from the payload tree, not from the checkout
 
 
+class TestScoreV2ReplaysThePinnedLexicon(unittest.TestCase):
+    """score_v2 replays the gate offline: by default it must apply the lexicon the arm pins (the one its gated runs used), not the v1 file."""
+
+    def setUp(self):
+        from tier2 import score_v2
+        self.S = score_v2
+
+    def test_an_arm_that_pins_a_lexicon_is_replayed_with_that_lexicon(self):
+        root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        (root / "lexicon").mkdir()
+        shutil.copyfile(LEXICON, root / "lexicon" / "distinction_features.json")
+        path, is_pin = self.S.replay_lexicon(root / "FROZEN_v2.0.json")
+        self.assertEqual(path, root / "lexicon" / "distinction_features.json")
+        self.assertTrue(is_pin)
+
+    def test_an_arm_without_a_pinned_lexicon_falls_back_to_v1(self):
+        from harness import _dkmem
+        path, is_pin = self.S.replay_lexicon(TIER2 / "FROZEN_v1.0.json")
+        self.assertEqual(path, Path(_dkmem.LEXICON_PATH))
+        self.assertFalse(is_pin)
+
+    def test_an_explicit_other_lexicon_is_reported_as_not_the_pin(self):
+        root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        (root / "lexicon").mkdir()
+        (root / "lexicon" / "distinction_features.json").write_text('{"x": 1}\n', encoding="utf-8")
+        path, is_pin = self.S.replay_lexicon(root / "FROZEN_v2.0.json", LEXICON)
+        self.assertEqual(path, LEXICON)
+        self.assertFalse(is_pin)
+
+    @unittest.skipUnless((TIER2 / "v2" / "FROZEN_v2.0.json").is_file(), "eval/tier2/v2 is not frozen")
+    def test_the_real_v2_arm_replays_its_frozen_lexicon(self):
+        path, is_pin = self.S.replay_lexicon(TIER2 / "v2" / "FROZEN_v2.0.json")
+        self.assertEqual(path, TIER2 / "v2" / "lexicon" / "distinction_features.json")
+        self.assertTrue(is_pin)
+
+
 if __name__ == "__main__":
     unittest.main()

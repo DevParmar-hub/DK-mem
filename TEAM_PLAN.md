@@ -176,3 +176,21 @@ No human review was available, so the Marathi and Gujarati sheets were reviewed 
 
 Still open (not doable by the model): the independent test set (outside authors), the freeze (lead's decision; with this lexicon it
 would freeze model-reviewed labels), GPU runs, and mr/gu judge validation.
+
+### Update (2026-10-18): v2 frozen, run and scored (PROVISIONAL)
+
+* `eval/tier2/v2` frozen as v2.0. All 8 configs were run on the 126 conversations on Kaggle (three kernels split by config). Every
+  acceptance item and every provenance check passes, and the replay reproduces each run's final store. Runs, shard metadata and the
+  scoring command: `eval/tier2_entity_runs/v2_full_20261017/README.md` (git-ignored, lead's machine).
+* `score_v2` now replays with the arm's pinned lexicon by default (it used to fall back to v1, which has no mr/gu entries); the report
+  records `lexicon_is_arm_pin`.
+* Headline (record level; 68 gold-different / 58 gold-same; single seed; dev). FCR off -> lexicon: A 11 -> 1, B 12 -> 6, C 18 -> 7.
+  MCR off -> lexicon: A 18 -> 30, B 5 -> 20, C 5 -> 20. The gate removes every kinship false merge in A/B/C. Contextual-qualifier false
+  merges remain (outside the gate). Most of the MCR cost is register gold-same pairs (12/14 blocked). The pre-registered `kinship_only`
+  sensitivity gives C 18 -> 7 FCR and 5 -> 11 MCR. D at tau 0.90 almost never merges (MCR 56-58/58).
+* Remaining kinship MCR cost (6 Hindi same pairs): name-only side (0002, 0043), periphrasis "Maa/Papa ki behen" (0086, 0114),
+  "Mama ki wife" tagged as mama (0094, a lexicon error), and the spelling "naani" missing in Hindi (0106).
+* In the paper (no reruns planned): `paper/tools/make_v2_numbers.py` pins both score reports and writes `paper/generated/v2_*`
+  (aggregates only; checked by `check_integrity.py`). There is a new results subsection (`sec:results-v2`, Table `tab:results-v2`),
+  and abstract, intro, method, benchmark and limitations were updated to match. Any other lexicon variant can be scored offline
+  with `score_v2 --lexicon` / `--feature-set` (no GPU).

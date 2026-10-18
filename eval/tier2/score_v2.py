@@ -317,10 +317,18 @@ def frontier_report(fr: dict, pairs: list[dict], c_points: dict, level: str, boo
 
 
 # ------------------------------------------------------------------------------------------------ arm
+def replay_lexicon(arm_frozen, override=None) -> tuple[Path, bool]:
+    """The lexicon the replay applies, and whether it is the arm's pin. Default: the lexicon the arm pins (the one its gated runs used,
+    v2: <arm root>/lexicon/distinction_features.json), else the v1 default; any other --lexicon is a counterfactual replay."""
+    arm_lexicon = Path(arm_frozen).parent / "lexicon" / "distinction_features.json"
+    path = Path(override or (arm_lexicon if arm_lexicon.is_file() else _dkmem.LEXICON_PATH))
+    return path, arm_lexicon.is_file() and sha256_file_lf(path) == sha256_file_lf(arm_lexicon)
+
+
 def score_arm(a) -> dict:
     check_same_conversations(a.runs, a.data_dir)
     turns = load_turns(a.data_dir)
-    lexicon_path = Path(a.lexicon or _dkmem.LEXICON_PATH)
+    lexicon_path, lexicon_is_arm_pin = replay_lexicon(a.arm_frozen, a.lexicon)
     lexicon = load_lexicon(lexicon_path)
     runs = sorted(p for p in Path(a.runs).iterdir() if p.is_dir())
     rlog0 = _jl(runs[0].parent / f"{runs[0].name}.tier2_retrieval_log.jsonl")
@@ -332,7 +340,7 @@ def score_arm(a) -> dict:
     features = None if a.feature_set == "frozen" else FEATURE_SETS[a.feature_set]
     conv_ids = sorted({p["conversation_id"] for p in pairs})
     res = {"inputs": {"runs": str(a.runs), "data_dir": str(a.data_dir), "lexicon": str(lexicon_path), "lexicon_sha256_lf": sha256_file_lf(lexicon_path),
-                      "languages": a.languages or "all", "classes": a.classes or "all", "excluded_pairs": sorted(exclude), "dropped": dropped,
+                      "lexicon_is_arm_pin": lexicon_is_arm_pin, "languages": a.languages or "all", "classes": a.classes or "all", "excluded_pairs": sorted(exclude), "dropped": dropped,
                       "split": a.split, "feature_set": {"name": a.feature_set, "classes": sorted(FEATURE_SETS[a.feature_set])},
                       "by_split": dict(Counter(p["split"] for p in pairs)),
                       "pairs": len(pairs), "by_relation": dict(Counter(p["relation"] for p in pairs))},
@@ -372,7 +380,8 @@ def main(argv=None) -> int:
     ap.add_argument("--arm-frozen", type=Path, required=True, help="that arm's FROZEN json (provenance)")
     ap.add_argument("--evaluator", type=Path, required=True, help="<kernel>.evaluator with t2_passthrough_used.jsonl and qa_id_map.json")
     ap.add_argument("--data-dir", type=Path, required=True, help="label directory (same conversations; final gold, metadata, QA references)")
-    ap.add_argument("--lexicon", type=Path, default=None)
+    ap.add_argument("--lexicon", type=Path, default=None,
+                    help="default: the arm's pinned lexicon (v2), else the v1 file; anything else is a counterfactual replay")
     ap.add_argument("--languages", default=None)
     ap.add_argument("--classes", default=None)
     ap.add_argument("--split", choices=("dev", "test", "all"), default="dev",

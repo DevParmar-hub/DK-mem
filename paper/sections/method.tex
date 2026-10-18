@@ -14,7 +14,9 @@ The gate described below adds a third outcome, \texttt{link\_unresolved}, for pa
 \paragraph{Distinction features and the lexicon.} DK-Mem tags each entry with distinction features from a static, hand-curated lexicon. Two classes gate
 merges: \emph{kinship} (e.g.\ distinct terms for paternal and maternal relatives) and \emph{register} (the second-person pronouns \emph{tu}, \emph{tum}, \emph{aap}).
 A third class, \emph{name\_variant}, is recorded but never gates, since name variants of one entity should merge. The v1 lexicon contains 15 Hindi entries
-(12 kinship, 3 register), all exact-word entries; it has no Marathi or Gujarati entries. The matcher is deterministic and deliberately context-free: it
+(12 kinship, 3 register), all exact-word entries; it has no Marathi or Gujarati entries. The v2 lexicon, used only in the v2 arm
+(Section~\ref{sec:results-v2}), keeps these 15 entries unchanged and adds 18 Marathi and Gujarati kinship and register entries, several with
+inflection patterns; these additions are not native-verified. The matcher is deterministic and deliberately context-free: it
 splits the utterance on whitespace, strips edge punctuation, applies NFC normalisation and Unicode casefolding, and compares whole tokens with the surface forms.
 If several entries give different values for one class, a fixed tie-break (priority, earlier token, longer span, entry id) selects one; for code-mixed language
 tags the hits of all listed languages are pooled and resolved by this single tie-break. The output is one value per class for the entry.

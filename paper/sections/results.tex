@@ -22,8 +22,11 @@ not cover. The LLM fallback equals the plain gate here because the Hindi lexicon
 \paragraph{The gate removes almost all false merges of the embedding host.} For Config D at $\tau=0.90$, in-scope Hindi FCR falls from
 \TOneDNinetyOffHiFCR{} to \TOneDNinetyLexHiFCR{} with MCR unchanged (\TOneDNinetyOffHiMCR{}); at $\tau=0.85$ from \TOneDEightyFiveOffHiFCR{}
 to \TOneDEightyFiveLexHiFCR{}. For Config A, from \TOneAOffHiFCR{} to \TOneALexHiFCR{} (MCR \TOneAOffHiMCR{} $\to$ \TOneALexHiMCR{}).
-\todo{P1: C (3B judge) already makes \TOneCOffHiFCR{} false merges, so the gate only adds missed merges (\TOneCOffHiMCR{} $\to$
-\TOneCLexHiMCR{}); B is unchanged. Contrast with Tier 2's 7B judge, which over-merges.}
+For Config C, the 3B judge already makes no in-scope Hindi false merge (\TOneCOffHiFCR{}), so the gate can only add missed merges
+(\TOneCOffHiMCR{} $\to$ \TOneCLexHiMCR{}). For B, false merges stay at \TOneBOffHiFCR{} and missed merges rise from \TOneBOffHiMCR{}
+to \TOneBLexHiMCR{}. Over all 173 pairs the gate leaves the false merges of B and C unchanged (\TOneBOffAllFCR{} and
+\TOneCOffAllFCR{}), because most of them fall in languages and classes the Hindi lexicon does not cover. A judge that under-merges
+gains nothing from a veto-only gate; in Tier~2 the 7B judge over-merges, and there the gate helps (Section~\ref{sec:results-v2}).
 
 \subsection{Tier 2: multi-session conversations, Configurations C and D}
 
@@ -58,3 +61,48 @@ All 69 pairs of each arm are drawn.}\label{fig:dcos}
 \paragraph{Mirror arm.} \todo{P1: Config C on the mirror arm: false merges \MirrorCoffHiFCR{} (gate off) $\to$ \MirrorClexHiFCR{} (gate on), missed merges \MirrorCoffHiMCR{} $\to$ \MirrorClexHiMCR{}. The gate helps on both arms.}
 
 \paragraph{QA.} \todo{P1: QA accuracy \MainCoffQA{} (C off) vs \MainClexQA{} (C on); merging affects what the answerer retrieves.}
+
+\subsection{Tier 2 v2: Hindi, Marathi and Gujarati, Configurations A--D}
+\label{sec:results-v2}
+
+The v2 arm (frozen as v2.0 before any run) has \VTwoNPairs{} injected pairs, \VTwoNDiff{} gold-different and \VTwoNSame{} gold-same
+(Hindi \VTwoNHiDiff{}/\VTwoNHiSame{}, Marathi \VTwoNMrDiff{}/\VTwoNMrSame{}, Gujarati \VTwoNGuDiff{}/\VTwoNGuSame{}, as different/same),
+and runs all four configurations with the 7B identity judge for A--C. It is a separate experiment from the v1.0 and mirror arms above
+and is not pooled with them. Rates here are at the final memory-record level; the v2 lexicon adds Marathi and Gujarati entries that,
+like the Marathi and Gujarati items, are not native-verified. These are provisional development results from one seed.
+
+\begin{table}[t]\centering\small
+\input{generated/v2_table.tex}
+\caption{Tier~2 v2 (\VTwoNPairs{} pairs; Hindi, Marathi, Gujarati), one seed, development data, provisional. FCR over the \VTwoNDiff{}
+gold-different pairs, MCR over the \VTwoNSame{} gold-same pairs, 95\% Wilson intervals; QA: correct answers over all questions.}
+\label{tab:results-v2}
+\end{table}
+
+\paragraph{The gate removes the kinship false merges of every LLM host.} With the gate on, false merges fall from \VTwoAOffFCR{} to
+\VTwoALexFCR{} (A), \VTwoBOffFCR{} to \VTwoBLexFCR{} (B) and \VTwoCOffFCR{} to \VTwoCLexFCR{} (C). For C the change in the
+gold-different merge rate is \VTwoCgateDifferentDiff{} (95\% CI \VTwoCgateDifferentDiffci{}; discordant pairs
+\VTwoCgateDifferentDiscordant{}, exact McNemar $p=\VTwoCgateDifferentMcNemar$). On kinship pairs the judge alone merges
+\VTwoCOffKinFCR{} gold-different pairs and none with the gate (\VTwoCLexKinFCR{}); A and B also drop to \VTwoALexKinFCR{} and
+\VTwoBLexKinFCR{}. The false merges that remain are contextual-qualifier pairs (C: \VTwoCLexQualFCR{}), a class the gate does not cover.
+By language, C's false merges go from \VTwoCOffHiFCR{} to \VTwoCLexHiFCR{} in Hindi, \VTwoCOffMrFCR{} to \VTwoCLexMrFCR{} in Marathi
+and \VTwoCOffGuFCR{} to \VTwoCLexGuFCR{} in Gujarati; the Marathi and Gujarati cells are small and only indicative.
+
+\paragraph{The cost is missed merges, mostly from register.} Missed merges rise from \VTwoCOffMCR{} to \VTwoCLexMCR{} for C (B:
+\VTwoBOffMCR{} to \VTwoBLexMCR{}; A: \VTwoAOffMCR{} to \VTwoALexMCR{}). Most of this comes from gold-same register pairs, in which one
+person is addressed with two registers: C misses \VTwoCOffRegMCR{} of them without the gate and \VTwoCLexRegMCR{} with it, because
+the gate treats a register difference as evidence of two people while our labelling convention treats a shared vocative as one. In
+the pre-registered kinship-only variant, in which register no longer vetoes, C keeps its false merges at \VTwoCLexKOFCR{} and misses
+\VTwoCLexKOMCR{} gold-same pairs instead of \VTwoCLexMCR{}. The gold-same kinship pairs that are still blocked (\VTwoCLexKinMCR{}
+for C, against \VTwoCOffKinMCR{} without the gate) are lexicon gaps rather than judge errors: one mention names the person without a
+kinship term, so only one side carries the feature; a relative is described periphrastically (``mother's sister'' for
+\emph{mausi}); \emph{mama ki wife} is tagged as \emph{mama} although it denotes the \emph{mami}; and a spelling variant
+(\emph{naani}) is missing.
+
+\paragraph{QA moves little.} QA accuracy is \VTwoCOffQApct\% (C, gate off) and \VTwoCLexQApct\% (gate on); B \VTwoBOffQApct\% and
+\VTwoBLexQApct\%; A \VTwoAOffQApct\% and \VTwoALexQApct\%. We did not test these differences; the extra missed merges did not lower
+QA accuracy on this benchmark.
+
+\paragraph{The embedding host cannot match the judge at any threshold.} At $\tau=0.90$ Config D merges almost nothing (MCR
+\VTwoDOffMCR{}). Over its full frontier (\VTwoDFrontNTaus{} distinct thresholds, none selected), the lowest false consolidation
+rate D reaches at C's missed-merge rate is \VTwoDFrontCOffOff\% without the gate and, at the gated C's missed-merge rate,
+\VTwoDFrontCLexLex\% with it, against C's own \VTwoCOffFCRpct\% and \VTwoCLexFCRpct\%.

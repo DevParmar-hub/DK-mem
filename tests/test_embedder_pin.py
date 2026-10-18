@@ -102,13 +102,25 @@ class TestLauncherDefaultsMatchThePin(unittest.TestCase):
         self.assertGreaterEqual(seen, 5)          # the scan found the launcher literals (guards against a silently empty scan)
 
 
-MANIFESTS = [f for f in glob.glob(str(EVAL / "tier2*runs" / "**" / "run_manifest.json"), recursive=True) if "/src/" not in f.replace("\\", "/")]
+V2_FULL = "v2_full_20261017"          # the v2 full run (8 runs); counted separately so neither set can switch the other's check off
+_ALL_MANIFESTS = [f for f in glob.glob(str(EVAL / "tier2*runs" / "**" / "run_manifest.json"), recursive=True) if "/src/" not in f.replace("\\", "/")]
+MANIFESTS = [f for f in _ALL_MANIFESTS if V2_FULL not in f]
+V2_FULL_MANIFESTS = [f for f in _ALL_MANIFESTS if V2_FULL in f]
 
 
 @unittest.skipUnless(len(MANIFESTS) == 28, "the 28 stored Tier-2 run manifests are not all present (gitignored run outputs)")
 class TestStoredManifests(unittest.TestCase):
     def test_all_28_recorded_embedder_revisions_are_the_registered_one(self):
         for f in MANIFESTS:
+            with self.subTest(manifest=f[-70:]):
+                r = E.verify_manifest_embedder(json.loads(Path(f).read_text(encoding="utf-8")))
+                self.assertEqual(r["status"], E.OK, r)
+
+
+@unittest.skipUnless(len(V2_FULL_MANIFESTS) == 8, "the 8 v2 full-run manifests are not all present (gitignored run outputs)")
+class TestStoredV2FullManifests(unittest.TestCase):
+    def test_all_8_v2_full_run_embedder_revisions_are_the_registered_one(self):
+        for f in V2_FULL_MANIFESTS:
             with self.subTest(manifest=f[-70:]):
                 r = E.verify_manifest_embedder(json.loads(Path(f).read_text(encoding="utf-8")))
                 self.assertEqual(r["status"], E.OK, r)
