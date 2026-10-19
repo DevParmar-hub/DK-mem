@@ -26,7 +26,7 @@ OUT = REPO / "paper" / "generated"
 MODES = {"off": "Off", "lexicon": "Lex"}
 LANGS = {"hi": "Hi", "mr": "Mr", "gu": "Gu"}
 CLASSES = {"kinship": "Kin", "honorific_register": "Reg", "name_variant": "Name", "contextual_qualifier": "Qual"}
-CONFIG_LABEL = {"A": "A (Mem0-style)", "B": "B (native-language fact)", "C": "C (LLM judge)", "D": "D (cosine, $\\tau$=0.90)"}
+CONFIG_LABEL = {"A": "A (English gloss)", "B": "B (native-language fact)", "C": "C (verbatim)", "D": "D (cosine, $\\tau$=0.90)"}   # as Table tab:hosts
 
 
 def rate(m: dict) -> dict:

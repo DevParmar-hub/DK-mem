@@ -44,7 +44,8 @@ underdetermined & \texttt{link\_unresolved} & \texttt{keep\_both}\\
 \end{table}
 
 \paragraph{Hosts (configurations).} DK-Mem sits in front of a host merge mechanism that decides first. Figure~\ref{fig:pipeline} shows the write path. Table~\ref{tab:hosts} lists the four configurations of the
-pipeline; this paper evaluates C and D on Tier~2.
+pipeline; the v1.0 and mirror arms of Tier~2 evaluate C and D, and the v2 arm evaluates all four. In A and B the same identity judge
+decides on the extracted entries.
 Config~C uses the identity judge \texttt{merge\_judge\_entity\_t2\_v2}: \texttt{merge} means both entries concern the same specific person, thing or event, whatever the
 facts say. In the Tier-2 runs it uses Qwen2.5-7B-Instruct (separate from the Qwen2.5-3B QA model) with greedy decoding and a 128-token budget, and its output is parsed strictly: the response must be a single JSON object with exactly the keys
 \texttt{decision} and \texttt{reason}, with no repair or fence stripping. An unparseable answer is never turned into a decision: the pair gets a parse-error status, no
@@ -62,7 +63,7 @@ C & verbatim utterance & LLM judge\\
 D & verbatim utterance & bge-m3 cosine $>\tau$\\
 \bottomrule
 \end{tabular}
-\caption{Host configurations. Only C and D are evaluated on Tier~2.}
+\caption{Host configurations. The v1.0 and mirror arms of Tier~2 evaluate C and D; the v2 arm evaluates all four.}
 \label{tab:hosts}
 \end{table}
 
